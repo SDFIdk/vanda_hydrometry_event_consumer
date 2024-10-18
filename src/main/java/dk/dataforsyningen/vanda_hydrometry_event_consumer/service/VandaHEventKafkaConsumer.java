@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +32,10 @@ public class VandaHEventKafkaConsumer {
 	
 	private int reportPeriodSec = 30; 
 	
-	
-	@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
+	@Autowired
+    private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
+
+	@KafkaListener(id="DMPEventHub", topics = "${spring.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}", autoStartup = "false")
     public void consume(ConsumerRecord<String, String> record
     		/*, Acknowledgment acknowledgment*/ 
     		) {
@@ -57,6 +61,24 @@ public class VandaHEventKafkaConsumer {
 		} catch (Exception e) {
             // Handle any errors during processing
             log.error("Error processing message: {}", e.getMessage(), e);
+        }
+    }
+	
+	// Start the listener programmatically
+    public void startListener() {
+        MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("DMPEventHub");
+        if (listenerContainer != null && !listenerContainer.isRunning()) {
+            listenerContainer.start();  // Start the listener
+            System.out.println("Kafka Listener started...");
+        }
+    }
+
+    // Stop the listener programmatically
+    public void stopListener() {
+        MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("DMPEventHub");
+        if (listenerContainer != null && listenerContainer.isRunning()) {
+            listenerContainer.stop();  // Stop the listener
+            System.out.println("Kafka Listener stopped.");
         }
     }
 	
