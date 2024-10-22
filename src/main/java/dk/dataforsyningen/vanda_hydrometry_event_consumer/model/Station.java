@@ -1,6 +1,7 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.model;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Station {
@@ -24,6 +25,8 @@ public class Station {
 	OffsetDateTime created = null;
 	
 	OffsetDateTime updated = null;
+	
+	ArrayList<MeasurementType> measurementTypes = new ArrayList<>();
 
 	public String getStationUid() {
 		return stationUid;
@@ -105,6 +108,14 @@ public class Station {
 		this.updated = updated;
 	}
 
+	public ArrayList<MeasurementType> getMeasurementTypes() {
+		return measurementTypes;
+	}
+
+	public void setMeasurementTypes(ArrayList<MeasurementType> measurementTypes) {
+		this.measurementTypes = measurementTypes;
+	}
+
 	@Override
 	public String toString() {
 		return "Station [" + 
@@ -117,7 +128,9 @@ public class Station {
 				",\n\tlocation=" + location + 
 				",\n\tdescription=" + description + 
 				",\n\tcreated=" + created + 
-				",\n\tupdated=" + updated + "]";
+				",\n\tupdated=" + updated +
+				",\n\tmeasurementTypes=" + measurementTypes +
+				"]";
 	}
 
 	@Override

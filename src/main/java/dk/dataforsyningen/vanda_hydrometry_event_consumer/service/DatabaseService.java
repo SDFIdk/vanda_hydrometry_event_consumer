@@ -1,7 +1,11 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,11 +38,67 @@ public class DatabaseService {
 	/* STATION */
 	
 	public List<Station> getAllStations() {
-		return stationDao.getAllStations();
+		List<Station> stationsAndMeasurementTypes = stationDao.getAllStations();
+		
+		//merge on same station
+		HashMap<String, Station> stations = new HashMap<>();
+		for(Station s : stationsAndMeasurementTypes) {
+			if (!stations.containsKey(s.getStationId())) {
+				stations.put(s.getStationId(), s);
+			} else {
+				Station station = stations.get(s.getStationId());
+				if (s.getMeasurementTypes().size() > 0) {
+					//after mapping from DB the station objects will only contain one (or none) measurements
+					station.getMeasurementTypes().add(s.getMeasurementTypes().getFirst()); 
+				}
+			}
+		}
+		
+		return new ArrayList<Station>(stations.values());
+	}
+	
+	public List<Station> getAllStationsByMeasurementType(int examinationTypeSc) {
+		List<Station> stationsAndMeasurementTypes = stationDao.findStationByExaminationTypeSc(examinationTypeSc);
+		
+		//merge on same station
+		HashMap<String, Station> stations = new HashMap<>();
+		for(Station s : stationsAndMeasurementTypes) {
+			if (!stations.containsKey(s.getStationId())) {
+				stations.put(s.getStationId(), s);
+			} else {
+				Station station = stations.get(s.getStationId());
+				if (s.getMeasurementTypes().size() > 0) {
+					//after mapping from DB the station objects will only contain one (or none) measurements
+					station.getMeasurementTypes().add(s.getMeasurementTypes().getFirst()); 
+				}
+			}
+		}
+		
+		return new ArrayList<Station>(stations.values());
 	}
 	
 	public Station getStation(String id) {
-		return stationDao.findStationByStationId(id);
+		List<Station> stationsAndMeasurementTypes = stationDao.findStationByStationId(id);
+		
+		//merge into one station
+		Station station = null;
+		for(Station s : stationsAndMeasurementTypes) {
+			if (station == null) {
+				station = s;
+			} else {
+				assert Objects.equals(station.getStationId(), s.getStationId());
+				if (s.getMeasurementTypes().size() > 0) {
+					//after mapping from DB the station objects will only contain one (or none) measurements
+					station.getMeasurementTypes().add(s.getMeasurementTypes().getFirst()); 
+				}
+			}
+		}
+	
+		return station;
+	}
+	
+	public boolean isMeasurementSupported(String stationId, int examinationTypeSc) {
+		return stationDao.isExaminationTypeScSupported(stationId, examinationTypeSc) > 0;
 	}
 	
 	/**
@@ -47,7 +107,21 @@ public class DatabaseService {
 	 */
 	@Transactional
 	public void saveStations(List<Station> stations) {
+		//add/update station
 		stationDao.addStations(stations);
+		
+		//save measurement types
+		addMeasurementTypes(stations.stream().flatMap(station -> station.getMeasurementTypes().stream()).collect(Collectors.toList()));
+		
+		//save station <-> measurement_type relation if it does not exist
+		stations.stream().forEach(
+				station -> {
+					ArrayList<MeasurementType> measurementTypes = station.getMeasurementTypes();
+					if (measurementTypes != null) {
+						stationDao.addStationMeasurementTypeRelations(measurementTypes.stream().map(mt -> station.getStationId()).toList(), measurementTypes);
+					}
+				}
+				);
 	}
 	
 	/**
@@ -56,11 +130,26 @@ public class DatabaseService {
 	 */
 	@Transactional
 	public void saveStation(Station station) {
+		//add/update station
 		stationDao.addStation(station);
+		
+		//save measurement types
+		addMeasurementTypes(station.getMeasurementTypes());
+				
+		//save station <-> measurement_type relation if it does not exist
+		ArrayList<MeasurementType> measurementTypes = station.getMeasurementTypes();
+		if (measurementTypes != null) {
+			stationDao.addStationMeasurementTypeRelations(measurementTypes.stream().map(mt -> station.getStationId()).toList(), measurementTypes);
+		}
 	}
 	
 	public void deleteStation(String id) {
+		stationDao.deleteRelationToMeasurementTypeByStationId(id);
 		stationDao.deleteStation(id);
+	}
+	
+	public void deleteStationMeasurementTypeRelation(String id) {
+		stationDao.deleteRelationToMeasurementTypeByStationId(id);
 	}
 	
 	public int countStations() {

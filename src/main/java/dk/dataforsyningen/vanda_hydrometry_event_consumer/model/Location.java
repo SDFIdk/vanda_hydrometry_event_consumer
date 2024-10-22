@@ -2,6 +2,7 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer.model;
 
 import java.util.Objects;
 
+
 public class Location {
 
 	Double x;
@@ -28,16 +29,6 @@ public class Location {
 
 	public String getSrid() {
 		return srid;
-	}
-	
-	public int getSridAsInt() {
-		int v = 0;
-		try {
-			v = Integer.parseInt(srid);
-		} catch (NumberFormatException ex) {
-			//Do nothing
-		}
-		return v;
 	}
 
 	public void setSrid(String srid) {

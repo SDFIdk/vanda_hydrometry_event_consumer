@@ -13,6 +13,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.LogSqlFactory;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
 
+
 @RegisterRowMapper(MeasurementMapper.class)
 @LogSqlFactory
 public interface MeasurementDao {

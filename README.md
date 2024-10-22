@@ -14,7 +14,7 @@ The events may be:
 * Measurement Updated
 * Measurement Deleted
 
-Only examination types 25 and 27 are considered.
+Only examination types 25 and 27 are considered and the records do not get updated or deleted but marked as not active and new records are created in case of addition and update events.
 
 DMP and DB connections are configured in the _application.properties_ file. The database DAO queries are based on Postgresql (with Postgis extension) database.
 
@@ -54,4 +54,4 @@ In order to save the events into the DB (using the config from properties file) 
 
 	start --saveDb
 	
-If the event is of type "measurement added" but the measurement already exists it will be updated. If the event is of type "measurement updated" but the measurement does not exist it will be ignored and a warning message logged.
+If the event is of type "measurement added" but the measurement already exists it will be updated. If the event is of type "measurement updated" but the measurement does not exist it will be ignored and a warning message logged. If the measurement type is "measurement updated" and the measurement exists, a new record is created and made "active" while the existing record will be made "not active".

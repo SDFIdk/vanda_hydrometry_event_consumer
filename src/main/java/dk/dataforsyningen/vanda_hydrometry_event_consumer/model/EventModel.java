@@ -20,14 +20,8 @@ public class EventModel {
  	private double result;
  	private OffsetDateTime measurementDateTime;
  	private OffsetDateTime recordDateTime;
- 	private boolean recordDateTimeChanged;
  	private long offset;
- 	private boolean offsetChanged;
  	private int partition;
- 	private boolean partitionChanged;
- 	private OffsetDateTime created;
- 	private OffsetDateTime updated;
- 	private int updateCount;
  	
  	public EventModel() {}
  	
@@ -43,14 +37,8 @@ public class EventModel {
  		this.result = obj.getResult();
  		this.measurementDateTime = obj.getMeasurementDateTime();
  		this.recordDateTime = obj.getRecordDateTime();
- 		this.recordDateTimeChanged = obj.isRecordDateTimeChanged();
  		this.offset = obj.getOffset();
- 		this.offsetChanged = obj.isOffsetChanged();
  		this.partition = obj.getPartition();
- 		this.partitionChanged = obj.isPartitionChanged();
- 		this.created = obj.getCreated();
- 		this.updated = obj.getUpdated();
- 		this.updateCount = obj.getUpdateCount();
  	}
  
 
@@ -69,14 +57,8 @@ public class EventModel {
 		event.setResult(VandaHUtility.toDouble(bodyObj.has("Result") ? "" + bodyObj.get("Result") : "0.0"));
 		event.setMeasurementDateTime(VandaHUtility.parseToUtcOffsetDateTime(bodyObj.has("MeasurementDateTime") ? "" + bodyObj.get("MeasurementDateTime") : null));
 		event.setRecordDateTime(null);
-		event.setRecordDateTimeChanged(false);
 		event.setOffset(0L);
-		event.setOffsetChanged(false);
 		event.setPartition(0);
-		event.setPartitionChanged(false);
-		event.setCreated(null);
-		event.setUpdated(null);
-		event.setUpdateCount(0);
 
 		return event;
  	}
@@ -153,58 +135,14 @@ public class EventModel {
 	public void setOffset(long offset) {
 		this.offset = offset;
 	}
-	public boolean isOffsetChanged() {
-		return offsetChanged;
-	}
-	public void setOffsetChanged(boolean offsetChanged) {
-		this.offsetChanged = offsetChanged;
-	}
 	public int getPartition() {
 		return partition;
 	}
 	public void setPartition(int partition) {
 		this.partition = partition;
-	}
-	public boolean isPartitionChanged() {
-		return partitionChanged;
-	}
-	public void setPartitionChanged(boolean partitionChanged) {
-		this.partitionChanged = partitionChanged;
-	}
-	public OffsetDateTime getCreated() {
-		return created;
-	}
-	public void setCreated(OffsetDateTime created) {
-		this.created = created;
-	}
-	public OffsetDateTime getUpdated() {
-		return updated;
-	}
-	public void setUpdated(OffsetDateTime updated) {
-		this.updated = updated;
-	}
-	public boolean isRecordDateTimeChanged() {
-		return recordDateTimeChanged;
-	}
-	public void setRecordDateTimeChanged(boolean recordDateTimeChanged) {
-		this.recordDateTimeChanged = recordDateTimeChanged;
-	}
-	public int getUpdateCount() {
-		return updateCount;
-	}
-	public void setUpdateCount(int updateCount) {
-		this.updateCount = updateCount;
-	}
+	}	
 	
 	
-	
-	@Override
-	public int hashCode() {
-		return Objects.hash(created, examinationTypeSc, eventType, measurementDateTime, measurementPointNumber,
-				offset, offsetChanged, operatorStationId, parameterSc, partition, partitionChanged, reasonCodeSc,
-				recordDateTime, recordDateTimeChanged, result, stationId, unitSc, updateCount, updated);
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -214,18 +152,16 @@ public class EventModel {
 		if (getClass() != obj.getClass())
 			return false;
 		EventModel other = (EventModel) obj;
-		return Objects.equals(created, other.created) && examinationTypeSc == other.examinationTypeSc
+		return  examinationTypeSc == other.examinationTypeSc
 				&& Objects.equals(eventType, other.eventType)
 				&& Objects.equals(measurementDateTime, other.measurementDateTime)
 				&& measurementPointNumber == other.measurementPointNumber && offset == other.offset
-				&& offsetChanged == other.offsetChanged && Objects.equals(operatorStationId, other.operatorStationId)
+				&& Objects.equals(operatorStationId, other.operatorStationId)
 				&& parameterSc == other.parameterSc && partition == other.partition
-				&& partitionChanged == other.partitionChanged && reasonCodeSc == other.reasonCodeSc
+				&& reasonCodeSc == other.reasonCodeSc
 				&& Objects.equals(recordDateTime, other.recordDateTime)
-				&& recordDateTimeChanged == other.recordDateTimeChanged
 				&& Double.doubleToLongBits(result) == Double.doubleToLongBits(other.result)
-				&& Objects.equals(stationId, other.stationId) && unitSc == other.unitSc
-				&& updateCount == other.updateCount && Objects.equals(updated, other.updated);
+				&& Objects.equals(stationId, other.stationId) && unitSc == other.unitSc;
 	}
 	
 	public boolean isSameMeasurement(Object obj) {
@@ -249,10 +185,8 @@ public class EventModel {
 				+ operatorStationId + ", measurementPointNumber=" + measurementPointNumber + ", unitSc=" + unitSc
 				+ ", parameterSc=" + parameterSc + ", examinationTypeSc=" + examinationTypeSc + ", reasonCodeSc="
 				+ reasonCodeSc + ", result=" + result + ", measurementDateTime=" + measurementDateTime
-				+ ", recordDateTime=" + recordDateTime + ", recordDateTimeChanged=" + recordDateTimeChanged
-				+ ", offset=" + offset + ", offsetChanged=" + offsetChanged + ", partition=" + partition
-				+ ", partitionChanged=" + partitionChanged + ", created=" + created + ", updated=" + updated
-				+ ", updateCount=" + updateCount + "]";
+				+ ", recordDateTime=" + recordDateTime + ", offset=" + offset + ", partition=" + partition
+				+ "]";
 	}
  	
  	
