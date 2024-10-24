@@ -28,8 +28,16 @@ public interface MeasurementDao {
 				is_current,
 				created
 			from hydrometry.measurement
+			where
+				station_id = :stationId
+				and measurement_type_id = :measurementTypeId
+				and measurement_point_number = :measurementPointNumber
+				and measurement_date_time = :measurementDateTime
 			""")
-	List<Measurement> getAllMeasurements();
+	List<Measurement> getMeasurementHistory(@Bind String stationId,
+			@Bind int measurementPointNumber,
+			@Bind String measurementTypeId,
+			@Bind OffsetDateTime measurementDateTime);
 	
 	@SqlQuery("""
 			select
@@ -54,69 +62,58 @@ public interface MeasurementDao {
 			@Bind OffsetDateTime measurementDateTime
 			);
 	
+	@SqlQuery("""
+			select
+				station_id,
+				measurement_point_number,
+				measurement_date_time,
+				measurement_type_id,
+				result,
+				is_current,
+				created
+			from hydrometry.measurement
+			where
+				station_id = :stationId
+				and measurement_type_id like '%-:measurementTypeId-%'
+				and measurement_point_number = :measurementPointNumber
+				and measurement_date_time = :measurementDateTime
+				and is_current = true
+			""")
+	Measurement findCurrentMeasurement(@Bind String stationId,
+			@Bind int measurementPointNumber,
+			@Bind int examinationTypeSc,
+			@Bind OffsetDateTime measurementDateTime
+			);
+	
 	/**
 	 * Add measurement if it does not exists
 	 * 
 	 * @param measurement
 	 */
 	@SqlQuery("""
-			insert into hydrometry.measurement (station_id, measurement_date_time, measurement_point_number, measurement_type_id, result, is_current, created)
-			(select :stationId, :measurementDateTime, :measurementPointNumber, :measurementTypeId, :result, :isCurrent, now()
-			where not exists (
-				select 1 from hydrometry.measurement where
-					station_id = :stationId
-					and measurement_date_time = :measurementDateTime
-					and measurement_point_number = :measurementPointNumber
-					and measurement_type_id = :measurementTypeId
-					and is_current = :isCurrent
-			))
+			insert into hydrometry.measurement 
+			(station_id, measurement_date_time, measurement_point_number, measurement_type_id, result, is_current, created)
+			values 
+			(:stationId, :measurementDateTime, :measurementPointNumber, :measurementTypeId, :result, :isCurrent, now())
 			returning *
 			""")
-	Measurement addMeasurement(@BindBean Measurement measurement);
+	Measurement insertMeasurement(@BindBean Measurement measurement);
 	
 	/**
-	 * Update measurement result if it exists
+	 * Update active status on matching measurements
 	 * 
 	 * @param measurement
 	 */
 	@SqlUpdate("""
-			update hydrometry.measurement set result = :result
+			update hydrometry.measurement set is_current = false
 			where
 				station_id = :stationId
 				and measurement_date_time = :measurementDateTime
 				and measurement_point_number = :measurementPointNumber
 				and measurement_type_id = :measurementTypeId
-				and result != :result
-				and is_current = :isCurrent
 			""")
-	void updateMeasurement(@BindBean Measurement measurement);
-	
-	@SqlBatch("""
-			insert into hydrometry.measurement (station_id, measurement_date_time, measurement_point_number, measurement_type_id, result, is_current, created)
-			select :stationId, :measurementDateTime, :measurementPointNumber, :measurementTypeId, :result, :isCurrent, now()
-			where not exists (
-				select 1 from hydrometry.measurement where
-					station_id = :stationId
-					and measurement_date_time = :measurementDateTime
-					and measurement_point_number = :measurementPointNumber
-					and measurement_type_id = :measurementTypeId
-					and is_current = :isCurrent
-			)
-			""")
-	void addMeasurements(@BindBean List<Measurement> measurements);
-	
-	@SqlBatch("""
-			update hydrometry.measurement set result = :result
-			where
-				station_id = :stationId
-				and measurement_date_time = :measurementDateTime
-				and measurement_point_number = :measurementPointNumber
-				and measurement_type_id = :measurementTypeId
-				and result != :result
-				and is_current = :isCurrent
-			""")
-	void updateMeasurements(@BindBean List<Measurement> measurements);
-	
+	int inactivateMeasurement(@BindBean Measurement measurement);
+		
 	@SqlUpdate("""
 			delete
 			from hydrometry.measurement
@@ -125,14 +122,33 @@ public interface MeasurementDao {
 				and measurement_date_time = :measurementDateTime
 				and measurement_point_number = :measurementPointNumber
 				and measurement_type_id = :measurementTypeId
-				and is_current = true
 			""")
-	void deleteMeasurement(@Bind String stationId, @Bind int measurementPointNumber,
+	int deleteMeasurement(@Bind String stationId, @Bind int measurementPointNumber,
 			@Bind String measurementTypeId,
 			@Bind OffsetDateTime measurementDateTime
 			);
 	
+	@SqlUpdate("""
+			delete
+			from hydrometry.measurement
+			where
+				station_id = :stationId
+			""")
+	int deleteMeasurement(@Bind String stationId);
+	
+	@SqlQuery("""
+			select count(*) from hydrometry.measurement
+			where
+				station_id = :stationId
+				and measurement_date_time = :measurementDateTime
+				and measurement_point_number = :measurementPointNumber
+				and measurement_type_id = :measurementTypeId
+			""")
+	int countHistory(@Bind String stationId, @Bind int measurementPointNumber,
+			@Bind String measurementTypeId,
+			@Bind OffsetDateTime measurementDateTime);
+	
 	@SqlQuery("select count(*) from hydrometry.measurement")
-	int count();
+	int countAll();
 	
 }

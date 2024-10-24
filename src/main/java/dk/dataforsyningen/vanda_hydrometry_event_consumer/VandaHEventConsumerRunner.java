@@ -8,7 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.VandaHEventConsumerConfig;
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.service.VandaHEventKafkaConsumer;
+import dk.dataforsyningen.vanda_hydrometry_event_consumer.service.VandaHEventProcessor;
 
 @Component
 public class VandaHEventConsumerRunner implements CommandLineRunner {
@@ -19,7 +19,7 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 	VandaHEventConsumerConfig config;
 	
 	@Autowired
-	VandaHEventKafkaConsumer eventConsumer;
+	VandaHEventProcessor eventProcessor;
 	
 	@Override
 	public void run(String... args) throws Exception {
@@ -32,7 +32,7 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 		try {
 		
 			if ("start".equalsIgnoreCase(command)) {
-				eventConsumer.startListener();
+				eventProcessor.startListener();
 				
 				//TODO: implement logic to stop if necessary
 				//eventConsumer.stopListener();

@@ -18,7 +18,11 @@ public class Station {
 	
 	String stationOwnerName = null;
 	
-	Location location = null;
+	Double locationX = null;
+	
+	Double locationY = null;
+	
+	Integer locationSrid = null;
 	
 	String description = null;
 	
@@ -27,6 +31,8 @@ public class Station {
 	OffsetDateTime updated = null;
 	
 	ArrayList<MeasurementType> measurementTypes = new ArrayList<>();
+	
+	
 
 	public String getStationUid() {
 		return stationUid;
@@ -76,12 +82,28 @@ public class Station {
 		this.stationOwnerName = stationOwnerName;
 	}
 
-	public Location getLocation() {
-		return location;
+	public Double getLocationX() {
+		return locationX;
 	}
 
-	public void setLocation(Location location) {
-		this.location = location;
+	public void setLocationX(Double locationX) {
+		this.locationX = locationX;
+	}
+	
+	public Double getLocationY() {
+		return locationY;
+	}
+
+	public void setLocationY(Double locationY) {
+		this.locationY = locationY;
+	}
+	
+	public Integer getLocationSrid() {
+		return locationSrid;
+	}
+
+	public void setLocationSrid(Integer locationSrid) {
+		this.locationSrid = locationSrid;
 	}
 
 	public String getDescription() {
@@ -125,18 +147,14 @@ public class Station {
 				",\n\toldStationNumber=" + oldStationNumber + 
 				",\n\tName=" + Name + 
 				",\n\tstationOwnerName=" + stationOwnerName + 
-				",\n\tlocation=" + location + 
+				",\n\tlocationX=" + locationX +
+				",\n\tlocationY=" + locationY +
+				",\n\tlocationSrid=" + locationSrid +
 				",\n\tdescription=" + description + 
 				",\n\tcreated=" + created + 
 				",\n\tupdated=" + updated +
 				",\n\tmeasurementTypes=" + measurementTypes +
 				"]";
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(Name, created, description, location, oldStationNumber, operatorStationId, stationId,
-				stationOwnerName, stationUid, updated);
 	}
 
 	@Override
@@ -149,7 +167,8 @@ public class Station {
 			return false;
 		Station other = (Station) obj;
 		return Objects.equals(Name, other.Name) && Objects.equals(created, other.created)
-				&& Objects.equals(description, other.description) && Objects.equals(location, other.location)
+				&& Objects.equals(description, other.description) && Objects.equals(locationX, other.locationX)
+				&& Objects.equals(locationY, other.locationY) && Objects.equals(locationSrid, other.locationSrid)
 				&& Objects.equals(oldStationNumber, other.oldStationNumber)
 				&& Objects.equals(operatorStationId, other.operatorStationId)
 				&& Objects.equals(stationId, other.stationId)

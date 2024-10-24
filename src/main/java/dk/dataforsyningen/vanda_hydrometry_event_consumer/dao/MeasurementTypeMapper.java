@@ -8,7 +8,6 @@ import org.jdbi.v3.core.statement.StatementContext;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 
-
 public class MeasurementTypeMapper implements RowMapper<MeasurementType> {
 
 	@Override

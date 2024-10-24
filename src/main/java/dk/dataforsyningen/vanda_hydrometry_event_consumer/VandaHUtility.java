@@ -1,6 +1,5 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -16,8 +15,6 @@ import java.util.regex.Pattern;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
-
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Location;
 
 
 /**
@@ -122,7 +119,7 @@ public class VandaHUtility {
 	 * @return date string yyyy-mm-ddThh:mm:ss.SSS[Z]
 	 */
 	private static String normalizeDate(String dateStr, boolean withoutSeconds) {
-        String regex = "(\\d{4})-(\\d{1,2})-(\\d{1,2})(?:[T\\s](\\d{1,2}):(\\d{1,2})(?::(\\d{1,2}))?(?:\\.(\\d{1,3}))?)?(Z)?";
+        String regex = "(\\d{4})-(\\d{1,2})-(\\d{1,2})(?:[T\\s](\\d{1,2}):(\\d{1,2})(?::(\\d{1,2}))?(?:\\.(\\d+))?)?(Z)?(?:\\+\\d{2}:\\d{2})?";
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(dateStr);
 

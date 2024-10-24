@@ -20,12 +20,16 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.VandaHEventCons
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
 
 @Service
-public class VandaHEventKafkaConsumer {
-
+public class VandaHEventProcessor {
+	
+	public static final String EVENT_MEASUREMENT_ADDED = "MeasurementAdded";
+	public static final String EVENT_MEASUREMENT_UPDATED = "MeasurementUpdated";
+	public static final String EVENT_MEASUREMENT_DELETED = "MeasurementDeleted";
+	
 	@Autowired
 	private DatabaseService dbService;
 	
-	private final Logger log = LoggerFactory.getLogger(VandaHEventKafkaConsumer.class);
+	private final Logger log = LoggerFactory.getLogger(VandaHEventProcessor.class);
 	
 	private HashMap<Integer, Long> minOffset = new HashMap<>();
 	private HashMap<Integer, Long> maxOffset = new HashMap<>();
@@ -38,7 +42,7 @@ public class VandaHEventKafkaConsumer {
 	
 	@Autowired
 	private VandaHEventConsumerConfig config;
-	
+		
 	@Autowired
     private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
 
@@ -71,7 +75,21 @@ public class VandaHEventKafkaConsumer {
 				} 
 				
 				if (config.isSaveDb()) {
-					//TODO: processing logic
+					
+					if (EVENT_MEASUREMENT_ADDED.equals(event.getEventType())) {
+						
+						dbService.addMeasurement(event);
+						
+					} else if (EVENT_MEASUREMENT_UPDATED.equals(event.getEventType())) {
+						
+						dbService.updateMeasurement(event);
+						
+					} else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
+						
+						dbService.deleteMeasurement(event);
+					}
+					
+					
 				}
 			}
 

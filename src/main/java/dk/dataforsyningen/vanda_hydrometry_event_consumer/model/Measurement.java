@@ -18,7 +18,26 @@ public class Measurement {
 	
 	String stationId = null; //FK
 
-	String measurementTypeId = null; //FK		
+	String measurementTypeId = null; //FK	
+	
+	public static Measurement from(EventModel event) {
+		Measurement measurement = new Measurement();
+		
+		measurement.setStationId(event.getStationId());
+		measurement.setMeasurementPointNumber(event.getMeasurementPointNumber());
+		measurement.setResult(event.getResult());
+		measurement.setMeasurementDateTime(event.getMeasurementDateTime());
+		
+		if (event.getParameterSc() != 0 && event.getExaminationTypeSc() != 0 && event.getUnitSc() != 0) {
+			measurement.setMeasurementTypeId(
+				event.getParameterSc() + "-" +
+				event.getExaminationTypeSc() + "-" +
+				event.getUnitSc()
+				);
+		}
+		
+		return measurement;
+	}
 	
 	public Integer getMeasurementPointNumber() {
 		return measurementPointNumber;

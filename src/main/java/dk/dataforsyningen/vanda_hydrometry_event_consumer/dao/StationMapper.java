@@ -2,15 +2,15 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Location;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
-
 
 public class StationMapper implements RowMapper<Station> {
 
@@ -23,12 +23,9 @@ public class StationMapper implements RowMapper<Station> {
 		station.setName(rs.getString("name"));
 		station.setStationOwnerName(rs.getString("station_owner_name"));
 
-		Location location = new Location();
-
-		location.setX((Double) rs.getObject("location_x"));
-		location.setY((Double) rs.getObject("location_y"));
-		location.setSrid(rs.getString("location_srid"));
-		station.setLocation(location);
+		station.setLocationX((Double) rs.getObject("location_x"));
+		station.setLocationY((Double) rs.getObject("location_y"));
+		station.setLocationSrid((Integer)rs.getObject("location_srid"));
 
 		station.setDescription(rs.getString("description"));
 		station.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));

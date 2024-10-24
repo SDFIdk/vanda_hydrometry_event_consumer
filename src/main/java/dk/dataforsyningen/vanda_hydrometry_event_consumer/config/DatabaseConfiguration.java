@@ -73,7 +73,7 @@ public class DatabaseConfiguration {
         
         return jdbi;
     }
-	
+		
 	@Bean
 	public StationDao stationDao(Jdbi jdbi) {
 		return jdbi.onDemand(StationDao.class);

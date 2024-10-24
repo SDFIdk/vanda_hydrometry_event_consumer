@@ -27,19 +27,6 @@ public interface MeasurementTypeDao {
 				unit_sc,
 				unit
 			from hydrometry.measurement_type
-			""")
-	List<MeasurementType> getAllMeasurementTypes();
-	
-	@SqlQuery("""
-			select
-				measurement_type_id,
-				parameter_sc,
-				parameter,
-				examination_type_sc,
-				examination_type,
-				unit_sc,
-				unit
-			from hydrometry.measurement_type
 			where measurement_type_id = :measurementTypeId
 			""")
 	MeasurementType findMeasurementTypeById(@Bind String measurementTypeId);
@@ -48,29 +35,25 @@ public interface MeasurementTypeDao {
 			insert into hydrometry.measurement_type
 			(measurement_type_id, parameter_sc, parameter, examination_type_sc, examination_type, unit_sc, unit)
 			values (:measurementTypeId, :parameterSc, :parameter, :examinationTypeSc, :examinationType, :unitSc, :unit)
-			on conflict (measurement_type_id) do update
-				set parameter = EXCLUDED.parameter,
-					examination_type = EXCLUDED.examination_type,
-					unit = EXCLUDED.unit
+			on conflict do nothing
 			""")
-	@GetGeneratedKeys
-	String addMeasurementType(@BindBean MeasurementType measurementType);
+	void addMeasurementType(@BindBean MeasurementType measurementType);
 	
 	@SqlBatch("""
 			insert into hydrometry.measurement_type
 			(measurement_type_id, parameter_sc, parameter, examination_type_sc, examination_type, unit_sc, unit)
 			values (:measurementTypeId, :parameterSc, :parameter, :examinationTypeSc, :examinationType, :unitSc, :unit)
-			on conflict (measurement_type_id) do update
-				set parameter = EXCLUDED.parameter,
-					examination_type = EXCLUDED.examination_type,
-					unit = EXCLUDED.unit
+			on conflict do nothing
 			""")
-	@GetGeneratedKeys
-	List<String> addMeasurementTypes(@BindBean List<MeasurementType> measurementTypes);
+	void addMeasurementTypes(@BindBean List<MeasurementType> measurementTypes);
 	
-	@SqlUpdate("delete from hydrometry.measurement_type where measurement_type_id = :id")
-	void deleteMeasurementType(@Bind String id);
+	@SqlUpdate("""
+			delete from hydrometry.measurement_type
+			where measurement_type_id = :measurementTypeId
+			""")
+	int deleteMeasurementType(@Bind String measurementTypeId);
 	
 	@SqlQuery("select count(*) from hydrometry.measurement_type")
 	int count();
+
 }
