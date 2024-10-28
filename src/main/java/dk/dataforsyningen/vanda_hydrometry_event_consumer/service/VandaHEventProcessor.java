@@ -88,8 +88,6 @@ public class VandaHEventProcessor {
 						
 						dbService.deleteMeasurement(event);
 					}
-					
-					
 				}
 			}
 

@@ -31,6 +31,10 @@ public class VandaHEventConsumerConfig {
 	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.examinationTypeSc:#{null}}")
 	private String examinationTypeSc;
 	
+	//enables DAO and database service testing - needs a DB connection
+	@Value("${vanda-hydrometry-data.database.test:#{false}}")
+	public boolean enableDbTest; //used only within testing
+	
 	/**
 	 * parse the arguments list and retrieves the first command
 	 * @param args
@@ -73,6 +77,14 @@ public class VandaHEventConsumerConfig {
 		return reportPeriodSec;
 	}
 	
+	public void setCommand(String command) {
+		this.command = command;
+	}
+
+	public boolean isEnableDbTest() {
+		return enableDbTest;
+	}
+
 	public List<Integer> getExaminationTypeSc() {
 		ArrayList<Integer> output = new ArrayList<>();
 		if (examinationTypeSc != null && examinationTypeSc.length() > 0) {

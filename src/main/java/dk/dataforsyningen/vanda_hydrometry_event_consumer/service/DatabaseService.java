@@ -43,7 +43,7 @@ public class DatabaseService {
 
 	
 	/**
-	 * Get measurement history
+	 * Get measurement history, i.e. all records about the requested measurement
 	 * 
 	 * @param stationId
 	 * @param measurementPointNumber
@@ -59,7 +59,7 @@ public class DatabaseService {
 	}
 
 	/**
-	 * Returns the active (there should be only one) measurement matching the given parameters.
+	 * Returns the current (there should be only one) measurement record matching the given parameters.
 	 * 
 	 * @param stationId
 	 * @param measurementPointNumber
@@ -77,10 +77,10 @@ public class DatabaseService {
 	/**
 	 * Performs the following operations:
 	 * 
-	 * converts event to a measurement
-	 * tries to inactivate previous versions of this measurement, there should be none
-	 * check measurement type if it exists
-	 * add active measurement
+	 * - converts event to a measurement
+	 * - check measurement type if it exists otherwise fail
+	 * - tries to inactivate previous versions of this measurement, there should be none otherwise WARN
+	 * - add current measurement
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
@@ -117,10 +117,10 @@ public class DatabaseService {
 	/**
 	 * Performs the following operations:
 	 * 
-	 * converts event to a measurement
-	 * read measurement type from current value, there should be one otherwise it fails
-	 * inactivate previous versions of this measurement
-	 * add active measurement
+	 * - converts event to a measurement
+	 * - read measurement type from current value, there should be one otherwise WARN
+	 * - inactivate previous versions of this measurement
+	 * - add current measurement
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
@@ -159,17 +159,16 @@ public class DatabaseService {
 	/**
 	 * Performs the following operations:
 	 * 
-	 * converts event to a measurement
-	 * read measurement type from current value, there should be one otherwise it fails
-	 * inactivate previous versions of this measurement
-	 * add active measurement
+	 * - converts event to a measurement
+	 * - read measurement type from current value, there should be one otherwise WARN
+	 * - inactivate previous (all) versions of this measurement
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
 	 * @throws SQLException 
 	 */
 	@Transactional
-	public Measurement deleteMeasurement(EventModel event) {
+	public void deleteMeasurement(EventModel event) {
 		
 		Measurement measurement = Measurement.from(event);
 		
@@ -183,20 +182,22 @@ public class DatabaseService {
 			
 			//inactivate previous versions
 			measurementDao.inactivateMeasurement(oldMeasurement);
-						
-			measurement.setIsCurrent(true); //make sure this will be the current measurement
-			
-			//add the new measurement
-			return measurementDao.insertMeasurement(measurement);
-			
+									
 		} else {
 			//throw new SQLException("Delete of nonexistent measurement " + measurement + ". No deletion!");
 			//maybe we only want a warning but continue with the other events
 			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement " + measurement + ". No deletion!");			
 		}
-		return null;
+		return;
 	}
 	
+	/**
+	 * Get station with the given station id.
+	 * used in testing.
+	 * 
+	 * @param id
+	 * @return Station or null
+	 */
 	public Station getStation(String id) {
 		List<Station> stationsAndMeasurementTypes = stationDao.findStationByStationId(id);
 		
@@ -218,7 +219,7 @@ public class DatabaseService {
 	}
 	
 	/**
-	 * Insert station if it does not exist or updates it otherwise.
+	 * Adds station if it does not exist or updates it otherwise.
 	 * @param station
 	 */
 	@Transactional
@@ -236,22 +237,36 @@ public class DatabaseService {
 		}
 	}
 	
+	/**
+	 * Deletes station from DB
+	 * 
+	 * @param id
+	 */
 	@Transactional
 	public void deleteStation(String id) {
 		stationDao.deleteRelationToMeasurementTypeByStationId(id);
 		stationDao.deleteStation(id);
 	}
 	
+	/**
+	 * Read the measurement type from DB
+	 * @param id
+	 * @return
+	 */
 	public MeasurementType getMeasurementType(String id) {
 		return measurementTypeDao.findMeasurementTypeById(id);
 	}
 	
+	/**
+	 * Adds measurement type into DB if it does not exist
+	 * @param measurementType
+	 */
 	public void addMeasurementType(MeasurementType measurementType) {
 		measurementTypeDao.addMeasurementType(measurementType);
 	}
 	
 	/**
-	 * Inserts (if it does not exist) or update the measurement from the given list.
+	 * Inserts (if it does not exist) or update the measurement types from the given list.
 	 * @param measurementTypes list
 	 */
 	@Transactional
@@ -259,78 +274,90 @@ public class DatabaseService {
 		measurementTypeDao.addMeasurementTypes(measurementTypes);
 	}
 	
+	/**
+	 * Deletes the measurement type with the given id
+	 * @param measurementTypeId
+	 * @return
+	 */
 	public int deleteMeasurementType(String measurementTypeId) {
 		return measurementTypeDao.deleteMeasurementType(measurementTypeId);
 	}
 	
 	/**
-	 * Inserts measurement.
+	 * Inserts measurement into DB.
 	 * @param measurements list
 	 */
 	public Measurement insertMeasurement(Measurement measurement) {
 		return measurementDao.insertMeasurement(measurement);
 	}
 	
+	/**
+	 * Set isCurrent=false to all records belonging to the given measurement
+	 * @param measurement
+	 */
 	public void inactivateMeasurement(Measurement measurement) {
 		measurementDao.inactivateMeasurement(measurement);
 	}
 	
-	
+	/**
+	 * Completely deletes the given measurement (and its history, i.e. all related records) from the DB.
+	 * Used for testing.
+	 * @param stationId
+	 * @param measurementPointNumber
+	 * @param measurementTypeId
+	 * @param measurementDatetime
+	 */
 	public void deleteHardMeasurement(String stationId, int measurementPointNumber,
 			String measurementTypeId, OffsetDateTime measurementDatetime
 			) {
 		measurementDao.deleteMeasurement(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
 	}
 	
+	/**
+	 * Completely deletes all the measurements from the given station (and its history, i.e. all related records) from the DB.
+	 * Used for testing.
+	 * @param stationId
+	 */
 	public void deleteHardMeasurement(String stationId) {
 		measurementDao.deleteMeasurement(stationId);
 	}
-	
+
+	/**
+	 * Counts how many records (history) does the given measurement has.
+	 * @param stationId
+	 * @param measurementPointNumber
+	 * @param measurementTypeId
+	 * @param measurementDatetime
+	 * @return nr records
+	 */
 	public int countMeasurementHistory(String stationId, int measurementPointNumber,
 			String measurementTypeId, OffsetDateTime measurementDatetime) {
 		return measurementDao.countHistory(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
 	}
 	
+	/**
+	 * Counts all measurements from the DB (current and non current)
+	 * @return
+	 */
 	public int countAllMeasurements() {
 		return measurementDao.countAll();
 	}
 	
+	/**
+	 * Counts all measurement types.
+	 * @return
+	 */
 	public int countAllMeasurementTypes() {
 		return measurementTypeDao.count();
 	}
 	
+	/**
+	 * Counts all stations from the DB.
+	 * @return
+	 */
 	public int countAllStations() {
 		return stationDao.count();
 	}
 	
 }
 
-/*
-[lastEventType=MeasurementAdded, 
-	stationId=47001196, 
-	operatorStationId=null, 
-	measurementPointNumber=1, 
-	unitSc=19, 
-	parameterSc=1233, 
-	examinationTypeSc=25, 
-	reasonCodeSc=0, 
-	result=-2.4, 
-	measurementDateTime=2024-10-12T00:30Z, 
-	recordDateTime=2024-10-12T11:00:48.885Z, 
-	offset=15586198, 
-]
-
-[lastEventType=MeasurementUpdated, 
-	stationId=70000275, 
-	operatorStationId=WATSONC-1519, 
-	measurementPointNumber=1, 
-	unitSc=0, 
-	parameterSc=0, 
-	examinationTypeSc=25, 
-	reasonCodeSc=5, 
-	result=78.3, 
-	measurementDateTime=2024-10-06T05:25Z, 
-	recordDateTime=2024-10-06T07:03:02.797Z, 
-]
- 
- */

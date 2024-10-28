@@ -74,7 +74,7 @@ public interface MeasurementDao {
 			from hydrometry.measurement
 			where
 				station_id = :stationId
-				and measurement_type_id like '%-:measurementTypeId-%'
+				and measurement_type_id like concat('%-',:examinationTypeSc,'-%')
 				and measurement_point_number = :measurementPointNumber
 				and measurement_date_time = :measurementDateTime
 				and is_current = true

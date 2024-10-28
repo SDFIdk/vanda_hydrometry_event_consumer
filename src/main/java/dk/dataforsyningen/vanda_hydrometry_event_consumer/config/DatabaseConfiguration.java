@@ -57,20 +57,6 @@ public class DatabaseConfiguration {
                 .installPlugin(new PostgisPlugin())
                 .installPlugin(new SqlObjectPlugin());
         
-        // This cancels the sql statement so the database don't use unnecessary
-        // ressources on requests
-        // taking to long.
-        // Gravitee timeout is 10 seconds, and it sends the correct 504 timeout http
-        // code.
-        // In the code we set it to 11 seconds because it triggers the
-        // UnableToExecuteStatementException,
-        // that returns a 400 http code (bad request), but in this case it should have
-        // been a 504 timeout.
-        // So the 11 seconds is for always be later than Gravitee, but still cancels the
-        // ongoing statement
-        // from being executed longer
-        jdbi.getConfig(SqlStatements.class).setQueryTimeout(11);
-        
         return jdbi;
     }
 		
