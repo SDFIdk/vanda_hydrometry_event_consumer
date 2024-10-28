@@ -150,7 +150,7 @@ public class DatabaseService {
 		} else {
 			//throw new SQLException("Update on nonexistent measurement " + measurement + ". No update.");
 			//maybe we only want a warning but continue with the other events
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Update on nonexistent measurement " + measurement + ". No update!");			
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Update on nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No update!");			
 		}
 		return null;
 	}
@@ -186,7 +186,7 @@ public class DatabaseService {
 		} else {
 			//throw new SQLException("Delete of nonexistent measurement " + measurement + ". No deletion!");
 			//maybe we only want a warning but continue with the other events
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement " + measurement + ". No deletion!");			
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
 		}
 		return;
 	}

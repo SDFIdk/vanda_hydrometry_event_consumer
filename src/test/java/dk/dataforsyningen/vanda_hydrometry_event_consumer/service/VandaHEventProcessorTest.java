@@ -1,5 +1,7 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,9 +29,12 @@ public class VandaHEventProcessorTest {
 	private String measurementUpdated = "{\"EventType\":\"MeasurementUpdated\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":82.2,\"ReasonCodeSc\":5}";
 	private String measurementDeleted = "{\"EventType\":\"MeasurementDeleted\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":0,\"ReasonCodeSc\":5}";
 	
+	private String irelevantMeasurement = "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"70000278\",\"OperatorStationId\":\"WATSONC-1518\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":29,\"MeasurementDateTime\":\"2024-10-05T00:00:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1154,\"UnitSc\":29,\"Result\":11.1}";
+	
 	ConsumerRecord<String, String> recordAdd;
 	ConsumerRecord<String, String> recordUpdate;
 	ConsumerRecord<String, String> recordDelete;
+	ConsumerRecord<String, String> recordIrelevant;
 	
 	EventModel event;
 	
@@ -64,6 +69,7 @@ public class VandaHEventProcessorTest {
 		recordAdd = new ConsumerRecord<>(topic, 1, 0, null, measurementAdded);
 		recordUpdate = new ConsumerRecord<>(topic, 1, 0, null, measurementUpdated);
 		recordDelete = new ConsumerRecord<>(topic, 1, 0, null, measurementDeleted);
+		recordIrelevant = new ConsumerRecord<>(topic, 1, 0, null, irelevantMeasurement);
 		
 		event = new EventModel();
 		
@@ -78,6 +84,14 @@ public class VandaHEventProcessorTest {
 		event.setPartition(1);
 		event.setRecordDateTime(VandaHUtility.parseToUtcOffsetDateTime(recordDateTime));
 		
+	}
+	
+	@Test
+	public void testSkipMeasurement() throws SQLException {
+		
+		processor.consume(recordIrelevant);
+		
+		verify(dbService, never()).addMeasurement(any());
 	}
 	
 	@Test

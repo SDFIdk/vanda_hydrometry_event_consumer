@@ -88,7 +88,7 @@ public class VandaHEventConsumerConfig {
 	public List<Integer> getExaminationTypeSc() {
 		ArrayList<Integer> output = new ArrayList<>();
 		if (examinationTypeSc != null && examinationTypeSc.length() > 0) {
-			String[] vals = examinationTypeSc.split(";");
+			String[] vals = examinationTypeSc.split(",");
 			for(String s : vals) {
 				try {
 					output.add(Integer.parseInt(s));

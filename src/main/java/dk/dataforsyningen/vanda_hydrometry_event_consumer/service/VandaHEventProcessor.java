@@ -3,6 +3,7 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -35,6 +36,9 @@ public class VandaHEventProcessor {
 	private HashMap<Integer, Long> maxOffset = new HashMap<>();
 	
 	private long eventCounter = 0l;
+	private long eventCounterAdd = 0l;
+	private long eventCounterUpd = 0l;
+	private long eventCounterDel = 0l;
 	private long eventCounterTotal = 0l;
 	private long counterReportTimer = 0l;
 	private OffsetDateTime minRecordTime = null;
@@ -58,8 +62,9 @@ public class VandaHEventProcessor {
 			event.setRecordDateTime(VandaHUtility.timestampToOffsetDateTimeUtc(record.timestamp()));
 
 			//skip undesired events
-			if (config.getExaminationTypeSc().size() == 0 ||  
-				config.getExaminationTypeSc().contains(event.getExaminationTypeSc()) 
+			List<Integer> allowedExaminations = config.getExaminationTypeSc(); 
+			if (allowedExaminations.size() == 0 ||  
+					allowedExaminations.contains(event.getExaminationTypeSc()) 
 				) {
 				if (config.isDisplayRawData()) {
 			        System.out.printf("Raw Message -> Key: %s, Value: %s [offset=%s; partition=%s; ts=%s]%n", 
@@ -79,10 +84,12 @@ public class VandaHEventProcessor {
 					if (EVENT_MEASUREMENT_ADDED.equals(event.getEventType())) {
 						
 						dbService.addMeasurement(event);
+						eventCounterAdd++;
 						
 					} else if (EVENT_MEASUREMENT_UPDATED.equals(event.getEventType())) {
 						
 						dbService.updateMeasurement(event);
+						eventCounterUpd++;
 						
 					} else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
 						
@@ -90,6 +97,7 @@ public class VandaHEventProcessor {
 						VandaHUtility.logAndPrint(log, Level.INFO, true, record.value());
 						
 						dbService.deleteMeasurement(event);
+						eventCounterDel++;
 					}
 				}
 			}
@@ -116,7 +124,10 @@ public class VandaHEventProcessor {
 			long now = System.currentTimeMillis();
 			if (config.getReportPeriodSec() > 0 && now >  counterReportTimer + config.getReportPeriodSec() * 1000) {
 				counterReportTimer = now; 
-				VandaHUtility.logAndPrint(null, null, config.isVerbose(), (new Date()) + ": Processed " + eventCounter + "/" + eventCounterTotal + " events within " + config.getReportPeriodSec() + " sec"); 
+				VandaHUtility.logAndPrint(null, null, config.isVerbose(), 
+						(new Date()) + ": Processed " + eventCounter + "/" + eventCounterTotal + 
+						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel + 
+						") within " + config.getReportPeriodSec() + " sec"); 
 				eventCounter = 0;
 				
 				//display offset min/max
