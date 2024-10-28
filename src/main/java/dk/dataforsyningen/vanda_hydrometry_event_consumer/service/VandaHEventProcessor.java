@@ -86,6 +86,9 @@ public class VandaHEventProcessor {
 						
 					} else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
 						
+						//TODO this should be delete at some point. I just wanted to see the delete record since it is so rare
+						VandaHUtility.logAndPrint(log, Level.INFO, true, record.value());
+						
 						dbService.deleteMeasurement(event);
 					}
 				}

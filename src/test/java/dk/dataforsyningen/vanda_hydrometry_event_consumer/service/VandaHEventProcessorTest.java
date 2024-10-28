@@ -10,6 +10,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -23,8 +24,8 @@ public class VandaHEventProcessorTest {
 	private String topic = "measurements";
 	
 	private String measurementAdded = "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1233,\"UnitSc\":19,\"Result\":1376.9,\"ReasonCodeSc\":5}";
-	private String measurementUpdated = "{\"EventType\":\"MeasurementUpdated\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-1519\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":82.2,\"ReasonCodeSc\":5}";
-	private String measurementDeleted = "{\\\"EventType\\\":\\\"MeasurementDeleted\\\",\\\"StationId\\\":\\\"12345678\\\",\\\"OperatorStationId\\\":\\\"WATSONC-1519\\\",\\\"MeasurementPointNumber\\\":1,\\\"ExaminationTypeSc\\\":25,\\\"MeasurementDateTime\\\":\\\"2024-10-04T23:50:00.00Z\\\",\\\"Result\\\":0,\\\"ReasonCodeSc\\\":5}";
+	private String measurementUpdated = "{\"EventType\":\"MeasurementUpdated\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":82.2,\"ReasonCodeSc\":5}";
+	private String measurementDeleted = "{\"EventType\":\"MeasurementDeleted\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":0,\"ReasonCodeSc\":5}";
 	
 	ConsumerRecord<String, String> recordAdd;
 	ConsumerRecord<String, String> recordUpdate;
@@ -33,13 +34,16 @@ public class VandaHEventProcessorTest {
 	EventModel event;
 	
 	private final String stationId = "12345678";
+	private final String operatorStationId = "WATSONC-773";
 	private final int measurementPoint = 1;
 	private final double result1 = 1376.9;
 	private final double result2 = 82.2;
 	private final int mtParamSc = 1233;
 	private final int mtExamTypeSc = 25;
 	private final int mtUnitSc = 19;
+	private final int reasonCodeSc = 5;
 	private final String dateTime = "2024-10-04T23:50:00.00Z";
+	private final String recordDateTime = "1969-12-31T23:59:59.999Z";
 	private final List<Integer> examinationTypes = List.of(25, 27);
 	
 	@MockBean
@@ -49,7 +53,8 @@ public class VandaHEventProcessorTest {
 	VandaHEventConsumerConfig config;
 	
 	@InjectMocks
-	private VandaHEventProcessor processor = new VandaHEventProcessor();
+	@Autowired
+	private VandaHEventProcessor processor;
 	
 	@BeforeEach 
 	public void setup() {
@@ -63,11 +68,16 @@ public class VandaHEventProcessorTest {
 		event = new EventModel();
 		
 		event.setStationId(stationId);
+		event.setOperatorStationId(operatorStationId);
 		event.setMeasurementPointNumber(measurementPoint);
 		event.setUnitSc(mtUnitSc);
 		event.setParameterSc(mtParamSc);
 		event.setExaminationTypeSc(mtExamTypeSc);
 		event.setMeasurementDateTime(VandaHUtility.parseForAPI(dateTime));
+		event.setReasonCodeSc(reasonCodeSc);
+		event.setPartition(1);
+		event.setRecordDateTime(VandaHUtility.parseToUtcOffsetDateTime(recordDateTime));
+		
 	}
 	
 	@Test
@@ -87,9 +97,11 @@ public class VandaHEventProcessorTest {
 		processor.consume(recordUpdate);
 		
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setUnitSc(0);
+		event.setParameterSc(0);
 		event.setResult(result2);
 		
-		verify(dbService).addMeasurement(event);
+		verify(dbService).updateMeasurement(event);
 	}
 	
 	@Test
@@ -98,9 +110,11 @@ public class VandaHEventProcessorTest {
 		processor.consume(recordDelete);
 		
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
+		event.setUnitSc(0);
+		event.setParameterSc(0);
 		event.setResult(0);
 		
-		verify(dbService).addMeasurement(event);
+		verify(dbService).deleteMeasurement(event);
 	}
 	
 }
