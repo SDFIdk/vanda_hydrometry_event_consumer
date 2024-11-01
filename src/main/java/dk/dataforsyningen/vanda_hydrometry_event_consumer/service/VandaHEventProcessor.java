@@ -62,10 +62,8 @@ public class VandaHEventProcessor {
 			event.setRecordDateTime(VandaHUtility.timestampToOffsetDateTimeUtc(record.timestamp()));
 
 			//skip undesired events
-			List<Integer> allowedExaminations = config.getExaminationTypeSc(); 
-			if (allowedExaminations.size() == 0 ||  
-					allowedExaminations.contains(event.getExaminationTypeSc()) 
-				) {
+			if (acceptEvent(event)) {
+				
 				if (config.isDisplayRawData()) {
 			        System.out.printf("Raw Message -> Key: %s, Value: %s [offset=%s; partition=%s; ts=%s]%n", 
 			        		record.key(), 
@@ -83,12 +81,12 @@ public class VandaHEventProcessor {
 					
 					if (EVENT_MEASUREMENT_ADDED.equals(event.getEventType())) {
 						
-						dbService.addMeasurement(event);
+						dbService.addMeasurementFromEvent(event);
 						eventCounterAdd++;
 						
 					} else if (EVENT_MEASUREMENT_UPDATED.equals(event.getEventType())) {
 						
-						dbService.updateMeasurement(event);
+						dbService.updateMeasurementFromEvent(event);
 						eventCounterUpd++;
 						
 					} else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
@@ -96,7 +94,7 @@ public class VandaHEventProcessor {
 						//TODO this should be delete at some point. I just wanted to see the delete record since it is so rare
 						VandaHUtility.logAndPrint(log, Level.INFO, true, record.value());
 						
-						dbService.deleteMeasurement(event);
+						dbService.deleteMeasurementFromEvent(event);
 						eventCounterDel++;
 					}
 				}
@@ -125,7 +123,7 @@ public class VandaHEventProcessor {
 			if (config.getReportPeriodSec() > 0 && now >  counterReportTimer + config.getReportPeriodSec() * 1000) {
 				counterReportTimer = now; 
 				VandaHUtility.logAndPrint(null, null, config.isVerbose(), 
-						(new Date()) + ": Processed " + eventCounter + "/" + eventCounterTotal + 
+						(new Date()) + ": Received " + eventCounter + "/" + eventCounterTotal + 
 						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel + 
 						") within " + config.getReportPeriodSec() + " sec"); 
 				eventCounter = 0;
@@ -146,6 +144,18 @@ public class VandaHEventProcessor {
 			VandaHUtility.logAndPrint(log, Level.ERROR, false, "Error processing message: " + e.getMessage(), e);
         }
     }
+	
+	private boolean acceptEvent(EventModel event) {
+		List<Integer> allowedExaminations = config.getExaminationTypeSc(); 
+		boolean acceptExamination = (allowedExaminations.size() == 0 ||  
+				allowedExaminations.contains(event.getExaminationTypeSc()));
+		
+		boolean acceptEventType = (EVENT_MEASUREMENT_ADDED.equals(event.getEventType()) && config.processAdditions()) ||
+				(EVENT_MEASUREMENT_UPDATED.equals(event.getEventType()) && config.processUpdates()) ||
+				(EVENT_MEASUREMENT_DELETED.equals(event.getEventType()) && config.processDeletions());
+		
+		return acceptExamination && acceptEventType;
+	}
 	
 	// Start the listener programmatically
     public void startListener() {

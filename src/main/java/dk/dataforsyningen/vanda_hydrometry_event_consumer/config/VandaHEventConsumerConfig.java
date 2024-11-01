@@ -25,6 +25,9 @@ public class VandaHEventConsumerConfig {
 	@Value("${savedb:#{null}}")
 	private String saveDb;  //boolean
 	
+	@Value("${events:#{null}}")
+	private String events;
+	
 	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec:#{0}}")
 	private int reportPeriodSec;
 	
@@ -73,6 +76,18 @@ public class VandaHEventConsumerConfig {
 		return saveDb != null;
 	}
 	
+	public boolean processAdditions() {
+		return events == null || events.toLowerCase().indexOf('a') != -1;
+	}
+	
+	public boolean processUpdates() {
+		return events == null || events.toLowerCase().indexOf('u') != -1;
+	}
+	
+	public boolean processDeletions() {
+		return events == null || events.toLowerCase().indexOf('d') != -1;
+	}
+	
 	public int getReportPeriodSec() {
 		return reportPeriodSec;
 	}
@@ -102,9 +117,14 @@ public class VandaHEventConsumerConfig {
 
 	@Override
 	public String toString() {
-		return "VandaHEventConsumerConfig [examinationTypeSc=" + examinationTypeSc + ", command=" + getCommand()
-				+ ", isVerbose=" + isVerbose() + ", isDisplayData=" + isDisplayData() + ", isDisplayRawData="
-				+ isDisplayRawData() + ", isSaveDb=" + isSaveDb() + ", getReportPeriodSec=" + getReportPeriodSec()
+		return "VandaHEventConsumerConfig [examinationTypeSc=" + examinationTypeSc + 
+				", command=" + getCommand()
+				+ ", isVerbose=" + isVerbose() + 
+				", isDisplayData=" + isDisplayData() + 
+				", isDisplayRawData=" + isDisplayRawData() + 
+				", isSaveDb=" + isSaveDb() + 
+				", getReportPeriodSec=" + getReportPeriodSec() +
+				", events=" + events
 				+ "]";
 	}
 

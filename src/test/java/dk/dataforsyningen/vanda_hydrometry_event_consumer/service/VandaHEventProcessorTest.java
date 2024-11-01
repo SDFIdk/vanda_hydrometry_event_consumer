@@ -65,6 +65,9 @@ public class VandaHEventProcessorTest {
 	public void setup() {
 		when(config.isSaveDb()).thenReturn(true);
 		when(config.getExaminationTypeSc()).thenReturn(examinationTypes);
+		when(config.processAdditions()).thenReturn(true);
+		when(config.processUpdates()).thenReturn(true);
+		when(config.processDeletions()).thenReturn(true);
 		
 		recordAdd = new ConsumerRecord<>(topic, 1, 0, null, measurementAdded);
 		recordUpdate = new ConsumerRecord<>(topic, 1, 0, null, measurementUpdated);
@@ -102,7 +105,7 @@ public class VandaHEventProcessorTest {
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
 		event.setResult(result1);
 		
-		verify(dbService).addMeasurement(event);
+		verify(dbService).addMeasurementFromEvent(event);
 	}
 	
 	@Test
@@ -115,7 +118,7 @@ public class VandaHEventProcessorTest {
 		event.setParameterSc(0);
 		event.setResult(result2);
 		
-		verify(dbService).updateMeasurement(event);
+		verify(dbService).updateMeasurementFromEvent(event);
 	}
 	
 	@Test
@@ -126,9 +129,9 @@ public class VandaHEventProcessorTest {
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
 		event.setUnitSc(0);
 		event.setParameterSc(0);
-		event.setResult(0);
+		event.setResult(null);
 		
-		verify(dbService).deleteMeasurement(event);
+		verify(dbService).deleteMeasurementFromEvent(event);
 	}
 	
 }

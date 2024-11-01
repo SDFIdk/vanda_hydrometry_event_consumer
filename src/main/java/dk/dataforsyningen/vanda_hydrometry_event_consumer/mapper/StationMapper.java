@@ -1,9 +1,7 @@
-package dk.dataforsyningen.vanda_hydrometry_event_consumer.dao;
+package dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -11,6 +9,7 @@ import org.jdbi.v3.core.statement.StatementContext;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
+
 
 public class StationMapper implements RowMapper<Station> {
 
@@ -22,21 +21,17 @@ public class StationMapper implements RowMapper<Station> {
 		station.setOldStationNumber(rs.getString("old_station_number"));
 		station.setName(rs.getString("name"));
 		station.setStationOwnerName(rs.getString("station_owner_name"));
-
 		station.setLocationX((Double) rs.getObject("location_x"));
 		station.setLocationY((Double) rs.getObject("location_y"));
 		station.setLocationSrid((Integer)rs.getObject("location_srid"));
-
+		station.setLocationType(rs.getString("location_type"));
 		station.setDescription(rs.getString("description"));
 		station.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));
 		station.setUpdated(VandaHUtility.toOffsetDate(rs.getTimestamp("updated"), false));
 		
-		String mtid = rs.getString("measurement_type_id");
-		
-		if (mtid != null) {
+		if ((Integer)rs.getObject("examination_type_sc") != null) {
 			MeasurementType mt = new MeasurementType();
 		
-			mt.setMeasurementTypeId(mtid);
 			mt.setParameterSc(rs.getInt("parameter_sc"));
 			mt.setParameter(rs.getString("parameter"));
 			mt.setExaminationTypeSc(rs.getInt("examination_type_sc"));
@@ -49,5 +44,4 @@ public class StationMapper implements RowMapper<Station> {
 				
 		return station;
 	}
-
 }

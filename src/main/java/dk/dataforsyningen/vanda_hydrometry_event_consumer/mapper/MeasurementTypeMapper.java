@@ -1,4 +1,4 @@
-package dk.dataforsyningen.vanda_hydrometry_event_consumer.dao;
+package dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,14 +8,14 @@ import org.jdbi.v3.core.statement.StatementContext;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 
+
 public class MeasurementTypeMapper implements RowMapper<MeasurementType> {
 
 	@Override
 	public MeasurementType map(ResultSet rs, StatementContext ctx) throws SQLException {
-		
+
 		MeasurementType mt = new MeasurementType();
 		
-		mt.setMeasurementTypeId(rs.getString("measurement_type_id"));
 		mt.setParameterSc(rs.getInt("parameter_sc"));
 		mt.setParameter(rs.getString("parameter"));
 		mt.setExaminationTypeSc(rs.getInt("examination_type_sc"));
@@ -25,5 +25,4 @@ public class MeasurementTypeMapper implements RowMapper<MeasurementType> {
 		
 		return mt;
 	}
-
 }

@@ -32,6 +32,12 @@ In order to start the message listener use the command:
 
 	start
 	
+### Events filtering
+
+In order to filter which event types to accept and process use the option --events and add the event type as the value. Use event type 'a' for measurement additions, 'u' for measurement updates and 'd' for measurement deletions. Use combinations or all 3 at once (as 'aud', which is the default too) as in the example. If the option is not used all events are processed by default
+
+	start --events=aud
+
 ### Display data
 
 In order to display the received (decoded into the internal model) data in the console (or redirect the output into a file) so the user can inspect it, use:

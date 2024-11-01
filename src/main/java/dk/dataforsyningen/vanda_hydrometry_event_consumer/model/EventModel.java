@@ -17,7 +17,7 @@ public class EventModel {
  	private int parameterSc;
  	private int examinationTypeSc;
  	private int reasonCodeSc;
- 	private double result;
+ 	private Double result;
  	private OffsetDateTime measurementDateTime;
  	private OffsetDateTime recordDateTime;
  	private long offset;
@@ -111,10 +111,10 @@ public class EventModel {
 	public void setReasonCodeSc(int reasonCodeSc) {
 		this.reasonCodeSc = reasonCodeSc;
 	}
-	public double getResult() {
+	public Double getResult() {
 		return result;
 	}
-	public void setResult(double result) {
+	public void setResult(Double result) {
 		this.result = result;
 	}
 	public OffsetDateTime getMeasurementDateTime() {

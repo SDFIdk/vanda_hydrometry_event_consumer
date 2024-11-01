@@ -16,6 +16,7 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementTypeDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.StationDao;
+import dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper.EventMeasurementMapper;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
@@ -53,9 +54,9 @@ public class DatabaseService {
 	 */
 	public List<Measurement> getMeasurementHistory(String stationId,
 			int measurementPointNumber,
-			String measurementTypeId,
+			int examinationTypeSc,
 			OffsetDateTime measurementDatetime) {
-		return measurementDao.getMeasurementHistory(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
+		return measurementDao.readMeasurementHistory(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
 
 	/**
@@ -69,48 +70,50 @@ public class DatabaseService {
 	 */
 	public Measurement getMeasurement(String stationId,
 			int measurementPointNumber,
-			String measurementTypeId,
+			int examinationTypeSc,
 			OffsetDateTime measurementDatetime) {
-		return measurementDao.findCurrentMeasurement(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
+		return measurementDao.readCurrentMeasurement(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
 	
 	/**
 	 * Performs the following operations:
 	 * 
 	 * - converts event to a measurement
-	 * - check measurement type if it exists otherwise fail
-	 * - tries to inactivate previous versions of this measurement, there should be none otherwise WARN
-	 * - add current measurement
+	 * - check if it is a delayed event
+	 * - if it is then drop it and WARN
+	 * - otherwise inactivate previous versions of this measurement, there should be none otherwise WARN
+	 * - add current measurement as active
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
 	 * @throws SQLException 
 	 */
 	@Transactional
-	public Measurement addMeasurement(EventModel event) throws SQLException {
+	public Measurement addMeasurementFromEvent(EventModel event) throws SQLException {
 		
-		Measurement measurement = Measurement.from(event);
+		Measurement newMeasurement = null;
 		
-		//check measurement type
-		MeasurementType measurementType = measurementTypeDao.findMeasurementTypeById(measurement.getMeasurementTypeId());
-				
-		if (measurementType != null) {
-					
+		Measurement measurement = EventMeasurementMapper.measurementFrom(event);
+		
+		boolean delayed = isEventDelayed(event);
+		
+		if (!delayed) {
 			//inactivate previous versions
-			int nr = measurementDao.inactivateMeasurement(measurement);
-			
+			int nr = measurementDao.inactivateMeasurementHistory(measurement);
+				
 			if (nr > 0) {
 				VandaHUtility.logAndPrint(log, Level.WARN, false, "Added existing measurement: " + measurement);
 			}
 			
 			measurement.setIsCurrent(true); //make sure this will be the current measurement
-			
+				
 			//add the new measurement
-			return measurementDao.insertMeasurement(measurement);
-			
+			newMeasurement = measurementDao.insertMeasurement(measurement);
 		} else {
-			throw new SQLException("The measurement type does not exist " + measurement.getMeasurementTypeId() + ". No insertion!");
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
 		}
+		
+		return newMeasurement;
 	}
 	
 	
@@ -118,41 +121,42 @@ public class DatabaseService {
 	 * Performs the following operations:
 	 * 
 	 * - converts event to a measurement
-	 * - read measurement type from current value, there should be one otherwise WARN
-	 * - inactivate previous versions of this measurement
-	 * - add current measurement
+	 * - check if it is a delayed event
+	 * - if it is then drop it and WARN
+	 * - otherwise inactivate previous versions of this measurement, there should be some otherwise WARN
+	 * - add current measurement as active
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
 	 * @throws SQLException 
 	 */
 	@Transactional
-	public Measurement updateMeasurement(EventModel event) {
+	public Measurement updateMeasurementFromEvent(EventModel event) throws SQLException {
 		
-		Measurement measurement = Measurement.from(event);
+		Measurement newMeasurement = null;
 		
-		Measurement oldMeasurement = measurementDao.findCurrentMeasurement(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), event.getMeasurementDateTime());
-						
-		if (oldMeasurement != null) {
+		Measurement measurement = EventMeasurementMapper.measurementFrom(event);
+								
+		boolean delayed = isEventDelayed(event);
 		
-			measurement.setMeasurementTypeId(oldMeasurement.getMeasurementTypeId());
-			
+		if (!delayed) {
 			//inactivate previous versions
-			measurementDao.inactivateMeasurement(oldMeasurement);
-						
+			int nr = measurementDao.inactivateMeasurementHistory(measurement);
+			
+			if (nr == 0) {	
+				VandaHUtility.logAndPrint(log, Level.WARN, false, "Update on nonexistent measurement " + measurement + ". Measurement inserted as new!");
+			}
+				
 			measurement.setIsCurrent(true); //make sure this will be the current measurement
-			
+				
 			//add the new measurement
-			return measurementDao.insertMeasurement(measurement);
-			
+			newMeasurement = measurementDao.insertMeasurement(measurement);
+		
 		} else {
-			//throw new SQLException("Update on nonexistent measurement " + measurement + ". No update.");
-			//maybe we only want a warning but continue with the other events
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Update on nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No update!");			
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
 		}
-		return null;
+		
+		return newMeasurement;
 	}
 	
 	
@@ -160,35 +164,46 @@ public class DatabaseService {
 	 * Performs the following operations:
 	 * 
 	 * - converts event to a measurement
-	 * - read measurement type from current value, there should be one otherwise WARN
-	 * - inactivate previous (all) versions of this measurement
+	 * - check if it is a delayed event
+	 * - if it is then drop it and WARN
+	 * - otherwise inactivate previous versions of this measurement, there should be some otherwise WARN
+	 * - add current measurement as inactive
 	 * 
 	 * @param event
 	 * @return inserted measurement or null
 	 * @throws SQLException 
 	 */
 	@Transactional
-	public void deleteMeasurement(EventModel event) {
+	public Measurement deleteMeasurementFromEvent(EventModel event) {
 		
-		Measurement measurement = Measurement.from(event);
+		Measurement newMeasurement = null;
 		
-		Measurement oldMeasurement = measurementDao.findCurrentMeasurement(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), event.getMeasurementDateTime());
-						
-		if (oldMeasurement != null) {
+		Measurement measurement = EventMeasurementMapper.measurementFrom(event);
 		
-			measurement.setMeasurementTypeId(oldMeasurement.getMeasurementTypeId());
-			
+		boolean delayed = isEventDelayed(event);
+		
+		if (!delayed) {			
 			//inactivate previous versions
-			measurementDao.inactivateMeasurement(oldMeasurement);
-									
+			int nr = measurementDao.inactivateMeasurementHistory(measurement);						
+			
+			if (nr == 0) {
+				VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
+			} else {
+				//add the new measurement as not current so that the timestamp is saved
+				measurement.setIsCurrent(false); //no record is current on deletion
+				newMeasurement = measurementDao.insertMeasurement(measurement);
+			}
 		} else {
-			//throw new SQLException("Delete of nonexistent measurement " + measurement + ". No deletion!");
-			//maybe we only want a warning but continue with the other events
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
 		}
-		return;
+		
+		return newMeasurement;
+	}
+	
+	private boolean isEventDelayed(EventModel event) {
+		return measurementDao.isEventDelayed(event.getRecordDateTime(), 
+				event.getStationId(), event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), event.getMeasurementDateTime());
 	}
 	
 	/**
@@ -199,7 +214,7 @@ public class DatabaseService {
 	 * @return Station or null
 	 */
 	public Station getStation(String id) {
-		List<Station> stationsAndMeasurementTypes = stationDao.findStationByStationId(id);
+		List<Station> stationsAndMeasurementTypes = stationDao.readStationByStationId(id);
 		
 		//merge into one station
 		Station station = null;
@@ -225,15 +240,15 @@ public class DatabaseService {
 	@Transactional
 	public void addStation(Station station) {
 		//add/update station
-		stationDao.addStation(station);
+		stationDao.insertStation(station);
 		
 		//save measurement types
-		measurementTypeDao.addMeasurementTypes(station.getMeasurementTypes());
+		measurementTypeDao.insertMeasurementTypes(station.getMeasurementTypes());
 				
 		//save station <-> measurement_type relation if it does not exist
 		ArrayList<MeasurementType> measurementTypes = station.getMeasurementTypes();
 		if (measurementTypes != null) {
-			stationDao.addStationMeasurementTypeRelations(measurementTypes.stream().map(mt -> station.getStationId()).toList(), measurementTypes);
+			stationDao.insertStationMeasurementTypeRelations(measurementTypes.stream().map(mt -> station.getStationId()).toList(), measurementTypes);
 		}
 	}
 	
@@ -244,8 +259,12 @@ public class DatabaseService {
 	 */
 	@Transactional
 	public void deleteStation(String id) {
-		stationDao.deleteRelationToMeasurementTypeByStationId(id);
+		stationDao.deleteRelationToMeasurementTypeByStation(id);
 		stationDao.deleteStation(id);
+	}
+	
+	public void deleteStationMeasurementTypeRelation(String id) {
+		stationDao.deleteRelationToMeasurementTypeByStation(id);
 	}
 	
 	/**
@@ -253,8 +272,8 @@ public class DatabaseService {
 	 * @param id
 	 * @return
 	 */
-	public MeasurementType getMeasurementType(String id) {
-		return measurementTypeDao.findMeasurementTypeById(id);
+	public MeasurementType getMeasurementType(int examinationTypeSc) {
+		return measurementTypeDao.readMeasurementTypeByExaminationType(examinationTypeSc);
 	}
 	
 	/**
@@ -262,7 +281,7 @@ public class DatabaseService {
 	 * @param measurementType
 	 */
 	public void addMeasurementType(MeasurementType measurementType) {
-		measurementTypeDao.addMeasurementType(measurementType);
+		measurementTypeDao.insertMeasurementType(measurementType);
 	}
 	
 	/**
@@ -271,7 +290,7 @@ public class DatabaseService {
 	 */
 	@Transactional
 	public void addMeasurementTypes(List<MeasurementType> measurementTypes) {
-		measurementTypeDao.addMeasurementTypes(measurementTypes);
+		measurementTypeDao.insertMeasurementTypes(measurementTypes);
 	}
 	
 	/**
@@ -279,15 +298,15 @@ public class DatabaseService {
 	 * @param measurementTypeId
 	 * @return
 	 */
-	public int deleteMeasurementType(String measurementTypeId) {
-		return measurementTypeDao.deleteMeasurementType(measurementTypeId);
+	public void deleteMeasurementType(int examinationTypeSc) {
+		measurementTypeDao.deleteMeasurementType(examinationTypeSc);
 	}
 	
 	/**
 	 * Inserts measurement into DB.
 	 * @param measurements list
 	 */
-	public Measurement insertMeasurement(Measurement measurement) {
+	public Measurement addMeasurement(Measurement measurement) {
 		return measurementDao.insertMeasurement(measurement);
 	}
 	
@@ -295,8 +314,8 @@ public class DatabaseService {
 	 * Set isCurrent=false to all records belonging to the given measurement
 	 * @param measurement
 	 */
-	public void inactivateMeasurement(Measurement measurement) {
-		measurementDao.inactivateMeasurement(measurement);
+	public void inactivateMeasurementHistory(Measurement measurement) {
+		measurementDao.inactivateMeasurementHistory(measurement);
 	}
 	
 	/**
@@ -304,13 +323,13 @@ public class DatabaseService {
 	 * Used for testing.
 	 * @param stationId
 	 * @param measurementPointNumber
-	 * @param measurementTypeId
+	 * @param examinationTypeSc
 	 * @param measurementDatetime
 	 */
-	public void deleteHardMeasurement(String stationId, int measurementPointNumber,
-			String measurementTypeId, OffsetDateTime measurementDatetime
+	public void deleteMeasurementHard(String stationId, int measurementPointNumber,
+			int examinationTypeSc, OffsetDateTime measurementDatetime
 			) {
-		measurementDao.deleteMeasurement(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
+		measurementDao.deleteMeasurementWithHistory(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
 	
 	/**
@@ -318,21 +337,21 @@ public class DatabaseService {
 	 * Used for testing.
 	 * @param stationId
 	 */
-	public void deleteHardMeasurement(String stationId) {
-		measurementDao.deleteMeasurement(stationId);
+	public void deleteMeasurementHard(String stationId) {
+		measurementDao.deleteMeasurementsForStation(stationId);
 	}
 
 	/**
 	 * Counts how many records (history) does the given measurement has.
 	 * @param stationId
 	 * @param measurementPointNumber
-	 * @param measurementTypeId
+	 * @param examinationTypeSc
 	 * @param measurementDatetime
 	 * @return nr records
 	 */
 	public int countMeasurementHistory(String stationId, int measurementPointNumber,
-			String measurementTypeId, OffsetDateTime measurementDatetime) {
-		return measurementDao.countHistory(stationId, measurementPointNumber, measurementTypeId, measurementDatetime);
+			int examinationTypeSc, OffsetDateTime measurementDatetime) {
+		return measurementDao.countHistory(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
 	
 	/**

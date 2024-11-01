@@ -4,27 +4,18 @@ import java.util.Objects;
 
 public class MeasurementType {
 	
-	String measurementTypeId = null; //Key
-	
-	String unit = null;
-	
-	Integer unitSc = null;
-	
-	String parameter = null;
-	
-	Integer parameterSc = null;
+	Integer examinationTypeSc = null;
 	
 	String examinationType = null;
 	
-	Integer examinationTypeSc = null;
-	
-	public String getMeasurementTypeId() {
-		return measurementTypeId;
-	}
+	Integer parameterSc = null;
 
-	public void setMeasurementTypeId(String measurementTypeId) {
-		this.measurementTypeId = measurementTypeId;
-	}
+	String parameter = null;
+	
+	Integer unitSc = null;
+
+	String unit = null;
+		
 
 	public String getUnit() {
 		return unit;
@@ -77,19 +68,18 @@ public class MeasurementType {
 	@Override
 	public String toString() {
 		return "MeasurementType [" +
-				"\n\tmeasurementTypeId=" + measurementTypeId + 
-				",\n\tunit=" + unit + 
-				",\n\tunitSc=" + unitSc +
-				",\n\tparameter=" + parameter + 
-				",\n\tparameterSc=" + parameterSc + 
+				",\n\texaminationTypeSc=" + examinationTypeSc +
 				",\n\texaminationType=" + examinationType +
-				",\n\texaminationTypeSc=" + examinationTypeSc + "]";
+				",\n\tparameterSc=" + parameterSc +
+				",\n\tparameter=" + parameter + 
+				",\n\tunitSc=" + unitSc +
+				",\n\tunit=" + unit + 
+				"]";
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(examinationType, examinationTypeSc, measurementTypeId, parameter, parameterSc, unit,
-				unitSc);
+		return Objects.hash(examinationType, examinationTypeSc, parameter, parameterSc, unit, unitSc);
 	}
 
 	@Override
@@ -103,9 +93,10 @@ public class MeasurementType {
 		MeasurementType other = (MeasurementType) obj;
 		return Objects.equals(examinationType, other.examinationType)
 				&& Objects.equals(examinationTypeSc, other.examinationTypeSc)
-				&& Objects.equals(measurementTypeId, other.measurementTypeId)
-				&& Objects.equals(parameter, other.parameter) && Objects.equals(parameterSc, other.parameterSc)
-				&& Objects.equals(unit, other.unit) && Objects.equals(unitSc, other.unitSc);
+				&& Objects.equals(parameter, other.parameter) 
+				&& Objects.equals(parameterSc, other.parameterSc)
+				&& Objects.equals(unit, other.unit) 
+				&& Objects.equals(unitSc, other.unitSc);
 	}
 	
 	

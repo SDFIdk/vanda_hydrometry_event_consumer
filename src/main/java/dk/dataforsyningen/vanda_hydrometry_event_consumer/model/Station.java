@@ -14,15 +14,17 @@ public class Station {
 	
 	String oldStationNumber = null;
 	
-	String Name = null;
+	String name = null;
 	
 	String stationOwnerName = null;
 	
-	Double locationX = null;
+	Double locationX;
 	
-	Double locationY = null;
+	Double locationY;
 	
-	Integer locationSrid = null;
+	Integer locationSrid;
+	
+	String locationType = null;
 	
 	String description = null;
 	
@@ -31,8 +33,7 @@ public class Station {
 	OffsetDateTime updated = null;
 	
 	ArrayList<MeasurementType> measurementTypes = new ArrayList<>();
-	
-	
+
 
 	public String getStationUid() {
 		return stationUid;
@@ -67,11 +68,11 @@ public class Station {
 	}
 
 	public String getName() {
-		return Name;
+		return name;
 	}
 
 	public void setName(String name) {
-		Name = name;
+		this.name = name;
 	}
 
 	public String getStationOwnerName() {
@@ -86,24 +87,24 @@ public class Station {
 		return locationX;
 	}
 
-	public void setLocationX(Double locationX) {
-		this.locationX = locationX;
+	public void setLocationX(Double x) {
+		this.locationX = x;
 	}
-	
+
 	public Double getLocationY() {
 		return locationY;
 	}
 
-	public void setLocationY(Double locationY) {
-		this.locationY = locationY;
+	public void setLocationY(Double y) {
+		this.locationY = y;
 	}
-	
+
 	public Integer getLocationSrid() {
 		return locationSrid;
 	}
 
-	public void setLocationSrid(Integer locationSrid) {
-		this.locationSrid = locationSrid;
+	public void setLocationSrid(Integer srid) {
+		this.locationSrid = srid;
 	}
 
 	public String getDescription() {
@@ -138,6 +139,14 @@ public class Station {
 		this.measurementTypes = measurementTypes;
 	}
 
+	public String getLocationType() {
+		return locationType;
+	}
+
+	public void setLocationType(String locationType) {
+		this.locationType = locationType;
+	}
+
 	@Override
 	public String toString() {
 		return "Station [" + 
@@ -145,16 +154,21 @@ public class Station {
 				",\n\tstationId=" + stationId + 
 				",\n\toperatorStationId=" + operatorStationId + 
 				",\n\toldStationNumber=" + oldStationNumber + 
-				",\n\tName=" + Name + 
+				",\n\tname=" + name + 
 				",\n\tstationOwnerName=" + stationOwnerName + 
-				",\n\tlocationX=" + locationX +
-				",\n\tlocationY=" + locationY +
-				",\n\tlocationSrid=" + locationSrid +
+				",\n\tlocation= [x=" + locationX + ", y=" + locationY + ", srid=" + locationSrid + "]" +
+				",\n\tlocationType=" + locationType +
 				",\n\tdescription=" + description + 
 				",\n\tcreated=" + created + 
 				",\n\tupdated=" + updated +
 				",\n\tmeasurementTypes=" + measurementTypes +
 				"]";
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, created, description, locationX, locationY, locationSrid, locationType, oldStationNumber, 
+				operatorStationId, stationId, stationOwnerName, stationUid, updated);
 	}
 
 	@Override
@@ -166,14 +180,17 @@ public class Station {
 		if (getClass() != obj.getClass())
 			return false;
 		Station other = (Station) obj;
-		return Objects.equals(Name, other.Name) && Objects.equals(created, other.created)
-				&& Objects.equals(description, other.description) && Objects.equals(locationX, other.locationX)
-				&& Objects.equals(locationY, other.locationY) && Objects.equals(locationSrid, other.locationSrid)
-				&& Objects.equals(oldStationNumber, other.oldStationNumber)
-				&& Objects.equals(operatorStationId, other.operatorStationId)
+		return Objects.equals(stationUid, other.stationUid)
 				&& Objects.equals(stationId, other.stationId)
 				&& Objects.equals(stationOwnerName, other.stationOwnerName)
-				&& Objects.equals(stationUid, other.stationUid) && Objects.equals(updated, other.updated);
+				&& Objects.equals(name, other.name) 
+				&& Objects.equals(locationType, other.locationType) 
+				&& Objects.equals(description, other.description) 
+				&& Objects.equals(locationSrid, other.locationSrid) && Objects.equals(locationX, other.locationX) && Objects.equals(locationY, other.locationY)
+				&& Objects.equals(oldStationNumber, other.oldStationNumber)
+				&& Objects.equals(operatorStationId, other.operatorStationId)
+				&& Objects.equals(created, other.created)
+				&& Objects.equals(updated, other.updated);
 	}
 	
 	

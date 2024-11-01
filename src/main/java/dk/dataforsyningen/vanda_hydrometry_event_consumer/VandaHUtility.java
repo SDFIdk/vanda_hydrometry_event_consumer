@@ -16,6 +16,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
+import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
+import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
+
 
 /**
  * Utility class
@@ -229,7 +232,7 @@ public class VandaHUtility {
 	 * @return OffsetDateTime in local or UTC time zone
 	 */
 	public static OffsetDateTime toOffsetDate(Timestamp ts, boolean utc) {
-		
+		if (ts == null) return null;
 		return utc ? dateToOfssetDateTimeUtc(new Date(ts.getTime())) 
 				: dateToOfssetDateTimeLocalZone(new Date(ts.getTime()));
 	}
@@ -241,17 +244,22 @@ public class VandaHUtility {
 	
 	public static int toInt(String s) {
 		int v = 0;
-		try {
-			v = Integer.parseInt(s);
-		} catch (NumberFormatException e) {}
+		if (s != null) {
+			try {
+				v = Integer.parseInt(s);
+			} catch (NumberFormatException e) {}
+		}
 		return v;
 	}
 	
 	public static double toDouble(String s) {
 		double v = 0;
-		try {
-			v = Double.parseDouble(s);
-		} catch (NumberFormatException e) {}
+		if (s != null) {
+			try {
+				v = Double.parseDouble(s);
+			} catch (NumberFormatException e) {}
+		}
 		return v;
 	}
+
 }

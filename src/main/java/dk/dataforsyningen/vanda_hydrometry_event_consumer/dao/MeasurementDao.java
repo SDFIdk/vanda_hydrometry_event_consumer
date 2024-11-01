@@ -12,53 +12,34 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.LogSqlFactory;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
+import dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper.MeasurementMapper;
 
-
-@RegisterRowMapper(MeasurementMapper.class)
 @LogSqlFactory
 public interface MeasurementDao {
-
-	@SqlQuery("""
-			select
-				station_id,
-				measurement_point_number,
-				measurement_date_time,
-				measurement_type_id,
-				result,
-				is_current,
-				created
-			from hydrometry.measurement
-			where
-				station_id = :stationId
-				and measurement_type_id = :measurementTypeId
-				and measurement_point_number = :measurementPointNumber
-				and measurement_date_time = :measurementDateTime
-			""")
-	List<Measurement> getMeasurementHistory(@Bind String stationId,
-			@Bind int measurementPointNumber,
-			@Bind String measurementTypeId,
-			@Bind OffsetDateTime measurementDateTime);
 	
 	@SqlQuery("""
 			select
 				station_id,
 				measurement_point_number,
 				measurement_date_time,
-				measurement_type_id,
+				vanda_event_timestamp,
+				examination_type_sc,
 				result,
+				result_elevation_corrected,
 				is_current,
 				created
 			from hydrometry.measurement
 			where
 				station_id = :stationId
-				and measurement_type_id = :measurementTypeId
+				and examination_type_sc = :examinationTypeSc
 				and measurement_point_number = :measurementPointNumber
 				and measurement_date_time = :measurementDateTime
-				and is_current = true
+			order by created
 			""")
-	Measurement findCurrentMeasurement(@Bind String stationId,
+	@RegisterRowMapper(MeasurementMapper.class)
+	List<Measurement> readMeasurementHistory(@Bind String stationId,
 			@Bind int measurementPointNumber,
-			@Bind String measurementTypeId,
+			@Bind int examinationTypeSc,
 			@Bind OffsetDateTime measurementDateTime
 			);
 	
@@ -67,40 +48,70 @@ public interface MeasurementDao {
 				station_id,
 				measurement_point_number,
 				measurement_date_time,
-				measurement_type_id,
+				vanda_event_timestamp,
+				examination_type_sc,
 				result,
+				result_elevation_corrected,
 				is_current,
 				created
 			from hydrometry.measurement
 			where
 				station_id = :stationId
-				and measurement_type_id like concat('%-',:examinationTypeSc,'-%')
+				and examination_type_sc = :examinationTypeSc
 				and measurement_point_number = :measurementPointNumber
 				and measurement_date_time = :measurementDateTime
 				and is_current = true
 			""")
-	Measurement findCurrentMeasurement(@Bind String stationId,
+	@RegisterRowMapper(MeasurementMapper.class)
+	Measurement readCurrentMeasurement(@Bind String stationId,
+			@Bind int measurementPointNumber,
+			@Bind int examinationTypeSc,
+			@Bind OffsetDateTime measurementDateTime
+			);
+	
+	@SqlQuery("""
+			select count(*) > 0
+			from hydrometry.measurement
+			where
+				station_id = :stationId
+				and examination_type_sc = :examinationTypeSc
+				and measurement_point_number = :measurementPointNumber
+				and measurement_date_time = :measurementDateTime
+				and is_current = true
+				and ((vanda_event_timestamp is not null and vanda_event_timestamp > :eventTimestamp) 
+					or (vanda_event_timestamp is null and created > :eventTimestamp)) 
+			""")
+	boolean isEventDelayed(@Bind OffsetDateTime eventTimestamp,
+			@Bind String stationId,
 			@Bind int measurementPointNumber,
 			@Bind int examinationTypeSc,
 			@Bind OffsetDateTime measurementDateTime
 			);
 	
 	/**
-	 * Add measurement if it does not exists
+	 * Add a new record for the given measurement if its timestamp is null 
+	 * or newer than the timestamp of the current record 
 	 * 
 	 * @param measurement
 	 */
 	@SqlQuery("""
-			insert into hydrometry.measurement 
-			(station_id, measurement_date_time, measurement_point_number, measurement_type_id, result, is_current, created)
-			values 
-			(:stationId, :measurementDateTime, :measurementPointNumber, :measurementTypeId, :result, :isCurrent, now())
+			insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, result, result_elevation_corrected, is_current, created)
+			values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :result, :resultElevationCorrected, :isCurrent, now())
 			returning *
 			""")
+	@RegisterRowMapper(MeasurementMapper.class)
 	Measurement insertMeasurement(@BindBean Measurement measurement);
 	
+	@SqlBatch("""
+			insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, result, result_elevation_corrected, is_current, created)
+			values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :result, :resultElevationCorrected, :isCurrent, now())
+			""")
+	void insertMeasurements(@BindBean List<Measurement> measurements);
+
+	
 	/**
-	 * Update active status on matching measurements
+	 * Set is_current to false on all records from the given measurement 
+	 * (all records in the given measurement's history)
 	 * 
 	 * @param measurement
 	 */
@@ -110,44 +121,86 @@ public interface MeasurementDao {
 				station_id = :stationId
 				and measurement_date_time = :measurementDateTime
 				and measurement_point_number = :measurementPointNumber
-				and measurement_type_id = :measurementTypeId
+				and examination_type_sc = :examinationTypeSc
 			""")
-	int inactivateMeasurement(@BindBean Measurement measurement);
-		
-	@SqlUpdate("""
-			delete
-			from hydrometry.measurement
+	int inactivateMeasurementHistory(@BindBean Measurement measurement);
+	
+	/**
+	 * Set is_current to false on all records from the given measurements list 
+	 * (all records in the measurements' history)
+	 * 
+	 * @param list of measurements
+	 */
+	@SqlBatch("""
+			update hydrometry.measurement set is_current = false
 			where
 				station_id = :stationId
 				and measurement_date_time = :measurementDateTime
 				and measurement_point_number = :measurementPointNumber
-				and measurement_type_id = :measurementTypeId
+				and examination_type_sc = :examinationTypeSc
 			""")
-	int deleteMeasurement(@Bind String stationId, @Bind int measurementPointNumber,
-			@Bind String measurementTypeId,
+	void inactivateMeasurementsHistory(@BindBean List<Measurement> measurements);
+	
+	/**
+	 * Deletes the matching measurement and all its history
+	 * 
+	 * @param stationId
+	 * @param measurementPointNumber
+	 * @param examinationTypeSc
+	 * @param measurementDateTime
+	 */
+	@SqlUpdate("""
+			delete from hydrometry.measurement
+			where
+				station_id = :stationId
+				and measurement_date_time = :measurementDateTime
+				and measurement_point_number = :measurementPointNumber
+				and examination_type_sc = :examinationTypeSc
+			""")
+	void deleteMeasurementWithHistory(@Bind String stationId, @Bind int measurementPointNumber,
+			@Bind int examinationTypeSc,
 			@Bind OffsetDateTime measurementDateTime
 			);
 	
+	/**
+	 * Deletes all measurements related to the given station
+	 * 
+	 * @param stationId
+	 */
 	@SqlUpdate("""
 			delete
 			from hydrometry.measurement
 			where
 				station_id = :stationId
 			""")
-	int deleteMeasurement(@Bind String stationId);
+	void deleteMeasurementsForStation(@Bind String stationId);
 	
+	/**
+	 * Counts the number of records in the given measurement's history
+	 * 
+	 * @param stationId
+	 * @param measurementPointNumber
+	 * @param examinationTypeSc
+	 * @param measurementDateTime
+	 * @return number of records
+	 */
 	@SqlQuery("""
 			select count(*) from hydrometry.measurement
 			where
 				station_id = :stationId
 				and measurement_date_time = :measurementDateTime
 				and measurement_point_number = :measurementPointNumber
-				and measurement_type_id = :measurementTypeId
+				and examination_type_sc = :examinationTypeSc
 			""")
 	int countHistory(@Bind String stationId, @Bind int measurementPointNumber,
-			@Bind String measurementTypeId,
+			@Bind int examinationTypeSc,
 			@Bind OffsetDateTime measurementDateTime);
 	
+	/**
+	 * Counts all measurements from the DB
+	 * 
+	 * @return number of records
+	 */
 	@SqlQuery("select count(*) from hydrometry.measurement")
 	int countAll();
 	
