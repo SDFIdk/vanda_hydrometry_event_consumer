@@ -77,7 +77,6 @@ public interface MeasurementDao {
 				and examination_type_sc = :examinationTypeSc
 				and measurement_point_number = :measurementPointNumber
 				and measurement_date_time = :measurementDateTime
-				and is_current = true
 				and ((vanda_event_timestamp is not null and vanda_event_timestamp > :eventTimestamp) 
 					or (vanda_event_timestamp is null and created > :eventTimestamp)) 
 			""")

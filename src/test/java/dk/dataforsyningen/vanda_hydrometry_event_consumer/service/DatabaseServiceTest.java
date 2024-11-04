@@ -16,10 +16,12 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,13 +59,14 @@ public class DatabaseServiceTest {
 	private final int mtUnitSc2 = 55;
 	private final String mtUnit2 = "l/s";
 	
+	private final int mtExamTypeSc0 = 999900;	//it is fake
+	
 	private final int measurementPoint1 = 1;
-	private final double result1 = 12.34;
-	private final double result2 = 56.78;
-	private final double result3 = 90.11;
-	private final double resultEC1 = 12.34;
-	private final double resultEC2 = 56.78;
-	private final double resultEC3 = 90.11;
+	private final double resultA = 12.34;
+	private final double resultB = 56.78;
+	private final double resultC = 90.11;
+	private final double resultECA = 12.34;
+	private final double resultECB = 56.78;
 	
 	private Station station1;
 	private MeasurementType mt1;
@@ -75,8 +78,7 @@ public class DatabaseServiceTest {
 	private OffsetDateTime dt10MinAgo;
 	private OffsetDateTime dt5MinAgo;
 	private OffsetDateTime dtNow;
-	
-	private boolean removeInsertedMeasurementTypes = true;
+	private OffsetDateTime dt5MinAfter;
 	
 	private boolean enableTest = false; 
 	
@@ -98,6 +100,7 @@ public class DatabaseServiceTest {
 		dt5MinAgo = VandaHUtility.parseForAPI(dtNow.minusMinutes(5).toString());
 		dt10MinAgo = VandaHUtility.parseForAPI(dtNow.minusMinutes(10).toString());
 		dt1DayAgo = VandaHUtility.parseForAPI(dtNow.minusDays(1).toString());
+		dt5MinAfter = VandaHUtility.parseForAPI(dtNow.plusMinutes(5).toString());
 		
 		mt1 = new MeasurementType();
 		mt1.setParameterSc(mtParamSc1);
@@ -131,8 +134,6 @@ public class DatabaseServiceTest {
 		m1.setStationId(stationId);
 		m1.setIsCurrent(true);
 		m1.setMeasurementPointNumber(measurementPoint1);
-		m1.setResult(result1);
-		m1.setResultElevationCorrected(resultEC1);
 		m1.setExaminationTypeSc(mtExamTypeSc1);
 		m1.setMeasurementDateTime(dt1DayAgo);
 		
@@ -142,7 +143,6 @@ public class DatabaseServiceTest {
 		event.setUnitSc(mtUnitSc1);
 		event.setParameterSc(mtParamSc1);
 		event.setExaminationTypeSc(mtExamTypeSc1);
-		event.setResult(result2);
 		event.setMeasurementDateTime(dt1DayAgo);
 				
 		deleteAll(); //clean first if any left overs
@@ -168,69 +168,9 @@ public class DatabaseServiceTest {
 
 	}	
 		
-	public void restOfTests() throws SQLException {
-		
-		//TODO clean up, move to other tests
-
-		//new measurementAdded event, different measurement date => new measurement
-		event.setMeasurementDateTime(dt10MinAgo);
-		//invalid measurement type => will fail
-		event.setExaminationTypeSc(0);
-		event.setUnitSc(1);
-		event.setParameterSc(1);
-		
-		addMissingMeasurementTypeByEvent(event);
-		
-		//db status:2 measurements on dt5MinAgo
-		//			1 measurement on dtNow
-		
-
-		event = new EventModel();
-		
-		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-		event.setStationId(stationId);
-		event.setMeasurementPointNumber(measurementPoint1);
-		event.setUnitSc(0);
-		event.setParameterSc(0);
-		event.setExaminationTypeSc(mtExamTypeSc1);
-		event.setResult(result3);
-		event.setMeasurementDateTime(dt5MinAgo);
-
-		//new measurementUpdated event on existing measurement => update (new record)
-		updateExistingMeasurement(event);
-		
-		//db status:3 measurements on dt5MinAgo
-		//			1 measurement on dtNow
-		
-		//new measurementUpdated event, different measurement date => new measurement, fail
-		event.setMeasurementDateTime(dt10MinAgo);
-		
-		updateNonexistingMeasurement(event);
-		
-		
-		event = new EventModel();
-		
-		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-		event.setStationId(stationId);
-		event.setMeasurementPointNumber(measurementPoint1);
-		event.setUnitSc(0);
-		event.setParameterSc(0);
-		event.setExaminationTypeSc(mtExamTypeSc1);
-		event.setResult(null);
-		event.setMeasurementDateTime(dt5MinAgo);
-		
-		//new measurementDeleted event on existing measurement => all history gets isCurrent=false
-		deleteExistingMeasurement(event);
-		
-		//new measurementDeleted event, different measurement date => fail
-		event.setMeasurementDateTime(dt10MinAgo);
-		
-		deleteNonexistingMeasurement(event);
-		
-	}
 	
 	/**
-	 * Test Scenario 1 assumes these steps:
+	 * Test Scenario 1 assumes these steps (in this order):
 	 * 	- received measurement added with TS NOW-10 min
 	 * 	- received measurement update with TS NOW-5 min
 	 * 	- received measurement deleted with TS NOW
@@ -245,6 +185,7 @@ public class DatabaseServiceTest {
 				
 		////////////// Received event MeasurementAdded
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
 		event.setRecordDateTime(dt10MinAgo);
 		Measurement measurement = dbService.addMeasurementFromEvent(event);
 		
@@ -263,7 +204,7 @@ public class DatabaseServiceTest {
 		assertEquals(currentMeasurement, history.getFirst());
 		assertTrue(currentMeasurement.getIsCurrent());
 		assertEquals(stationId, currentMeasurement.getStationId());
-		assertEquals(result2, currentMeasurement.getResult());
+		assertEquals(resultA, currentMeasurement.getResult());
 		assertNull(currentMeasurement.getResultElevationCorrected());
 		assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
 		assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
@@ -272,7 +213,7 @@ public class DatabaseServiceTest {
 		
 		////////////// Received event MeasurementUpdated
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-		event.setResult(result1); //same as the one from API
+		event.setResult(resultB); //same as the one from API
 		event.setRecordDateTime(dt5MinAgo);
 		Thread.sleep(300);
 		measurement = dbService.updateMeasurementFromEvent(event);
@@ -290,27 +231,29 @@ public class DatabaseServiceTest {
 		assertEquals(2, history.size());
 		Measurement oldM = history.getFirst();
 		Measurement newM = history.getLast();
+
 		assertFalse(oldM.getIsCurrent());
-		assertTrue(newM.getIsCurrent());
-		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
-		
 		assertEquals(stationId, oldM.getStationId());
+		assertEquals(resultA, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
 		assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultB, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
+		
 		assertEquals(newM.getStationId(), oldM.getStationId());
 		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
-		assertEquals(result2, oldM.getResult());
-		assertNull(oldM.getResultElevationCorrected());
-		assertEquals(result1, newM.getResult());
-		assertNull(newM.getResultElevationCorrected());
 		assertEquals(newM, currentMeasurement);
-		assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
-		assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
 		
 		//db status: 2 measurements from dt1DayAgo (the active one with TS = dt5MinAgo)
 		
 		////////////// Received event MeasurementDeleted
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-		event.setResult(null);
+		event.setResult(0.0);
 		event.setRecordDateTime(dtNow);
 		Thread.sleep(300);
 		dbService.deleteMeasurementFromEvent(event);
@@ -327,20 +270,44 @@ public class DatabaseServiceTest {
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 	
-		assertEquals(2, history.size());
-		oldM = history.getFirst();
+		assertEquals(3, history.size());
+		Measurement olderM = history.getFirst();
+		oldM = history.get(1);
 		newM = history.getLast();
+		
+		assertFalse(olderM.getIsCurrent());
+		assertEquals(stationId, olderM.getStationId());
+		assertEquals(resultA, olderM.getResult());
+		assertNull(olderM.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
+		
 		assertFalse(oldM.getIsCurrent());
+		assertEquals(resultB, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
+		assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
+		
 		assertFalse(newM.getIsCurrent());
+		assertEquals(0.0, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dtNow, newM.getVandaEventTimestamp());
+		
+		assertEquals(olderM.getStationId(), oldM.getStationId());
+		assertEquals(olderM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertTrue(olderM.getCreated().isBefore(oldM.getCreated()));
 		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(newM.getStationId(), oldM.getStationId());
+		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		
+		//db status: 3 measurements from dt1DayAgo (all are inactive)
 	}
 	
 	
 	/**
-	 * Test Scenario 2 assumes these steps:
+	 * Test Scenario 2 assumes these steps (in this order):
 	 * 	- received measurement added  with TS NOW-10 min
-	 * 	- read measurement from API   at NOW-5 min
-	 * 	- received measurement update with TS NOW
+	 * 	- read measurement from API   at NOW min
+	 * 	- received measurement update with TS NOW+5
 	 * 
 	 * @throws SQLException
 	 * @throws InterruptedException 
@@ -350,15 +317,10 @@ public class DatabaseServiceTest {
 		
 		if (!enableTest) return;
 		
-		////////////// add measurement as if it would be read from API
-		m1 = addMeasurement(m1);
-		
-		//status: 1 measurement from dt1DayAgo (TS = null)
-		
-		////////////// Received event MeasurementAdded
+		//////////////Received event MeasurementAdded
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
 		event.setRecordDateTime(dt10MinAgo);
-		Thread.sleep(300);
 		Measurement measurement = dbService.addMeasurementFromEvent(event);
 		
 		Measurement currentMeasurement = dbService.getMeasurement(measurement.getStationId(), 
@@ -371,31 +333,63 @@ public class DatabaseServiceTest {
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertTrue(currentMeasurement.getIsCurrent());
+		assertEquals(stationId, currentMeasurement.getStationId());
+		assertEquals(resultA, currentMeasurement.getResult());
+		assertNull(currentMeasurement.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
+		
+		//db status: 1 measurements from dt1DayAgo (TS = dt10MinAgo)
+		
+		//////////////add measurement as if it would be read from API
+		Thread.sleep(300);
+		m1.setResult(resultA);
+		m1.setResultElevationCorrected(resultECA);
+		Measurement insertedMeasurement = addMeasurement(m1);	
+	
+		currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(), 
+				insertedMeasurement.getMeasurementPointNumber(), 
+				insertedMeasurement.getExaminationTypeSc(), 
+				insertedMeasurement.getMeasurementDateTime());
+		
+		assertEquals(insertedMeasurement, currentMeasurement);
+		
+		history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
 		assertEquals(2, history.size());
 		Measurement oldM = history.getFirst();
 		Measurement newM = history.getLast();
-		assertFalse(oldM.getIsCurrent());
-		assertTrue(newM.getIsCurrent());
-		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
 		
+		assertFalse(oldM.getIsCurrent());
 		assertEquals(stationId, oldM.getStationId());
+		assertEquals(resultA, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
 		assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultA, newM.getResult());
+		assertEquals(resultECA, newM.getResultElevationCorrected());
+		assertNull(newM.getVandaEventTimestamp());
+		
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(newM, currentMeasurement);
 		assertEquals(newM.getStationId(), oldM.getStationId());
 		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
-		assertEquals(result1, oldM.getResult());
-		assertEquals(resultEC1, oldM.getResultElevationCorrected());		
-		assertEquals(result2, newM.getResult());
-		assertNull(newM.getResultElevationCorrected());
-		assertEquals(newM, currentMeasurement);
-		assertNull(oldM.getVandaEventTimestamp());
-		assertEquals(dt10MinAgo, newM.getVandaEventTimestamp());
 		
-		//db status: 2 measurements from dt1DayAgo (the active one with TS = dt10MinAgo)
+		//status: 2 measurement from dt1DayAgo (the active one with TS = null)
 		
 		////////////// Received event MeasurementUpdated
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-		event.setResult(result1); //same as the one from API
-		event.setRecordDateTime(dt5MinAgo);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAfter);
 		Thread.sleep(300);
 		measurement = dbService.updateMeasurementFromEvent(event);
 		
@@ -413,111 +407,604 @@ public class DatabaseServiceTest {
 		Measurement olderM = history.getFirst();
 		oldM = history.get(1);
 		newM = history.getLast();
-		assertFalse(olderM.getIsCurrent());
-		assertFalse(oldM.getIsCurrent());
-		assertTrue(newM.getIsCurrent());
-		assertTrue(olderM.getCreated().isBefore(oldM.getCreated()));
-		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
 		
+		assertFalse(olderM.getIsCurrent());
 		assertEquals(stationId, olderM.getStationId());
+		assertEquals(resultA, olderM.getResult());
+		assertNull(olderM.getResultElevationCorrected());
 		assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
+		
+		assertFalse(oldM.getIsCurrent());
+		assertEquals(resultECA, oldM.getResultElevationCorrected());		
+		assertEquals(resultA, oldM.getResult());
+		assertNull(oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultB, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dt5MinAfter, newM.getVandaEventTimestamp());
+		
 		assertEquals(olderM.getStationId(), oldM.getStationId());
 		assertEquals(olderM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertTrue(olderM.getCreated().isBefore(oldM.getCreated()));
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
 		assertEquals(newM.getStationId(), oldM.getStationId());
 		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
-		assertEquals(result1, olderM.getResult());
-		assertEquals(resultEC1, olderM.getResultElevationCorrected());		
-		assertEquals(result2, oldM.getResult());
-		assertNull(oldM.getResultElevationCorrected());
-		assertEquals(result1, newM.getResult());
-		assertNull(newM.getResultElevationCorrected());
 		assertEquals(newM, currentMeasurement);
-		assertNull(olderM.getVandaEventTimestamp());
-		assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
-		assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
 		
-		//db status: 3 measurements from dt1DayAgo (the active one with TS = dt5MinAgo)
+		//db status: 3 measurements from dt1DayAgo (the active one with TS = dt5MinAfter)
 		
-		////////////// Received event MeasurementDeleted
-		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-		event.setResult(null);
-		event.setRecordDateTime(dtNow);
+	}
+	
+	
+	/**
+	 * Test Scenario 3 assumes these steps (in this order):
+	 * 	- received measurement added  with TS NOW-10 min
+	 * 	- received measurement update with TS NOW-5 min
+	 * 	- read measurement from API   at NOW min
+	 * 
+	 * @throws SQLException
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testScenario3() throws SQLException, InterruptedException {
+		
+		if (!enableTest) return;
+		
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Measurement measurement = dbService.addMeasurementFromEvent(event);
+		
+		Measurement currentMeasurement = dbService.getMeasurement(measurement.getStationId(), 
+				measurement.getMeasurementPointNumber(), 
+				measurement.getExaminationTypeSc(), 
+				measurement.getMeasurementDateTime());
+		
+		List<Measurement> history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertTrue(currentMeasurement.getIsCurrent());
+		assertEquals(stationId, currentMeasurement.getStationId());
+		assertEquals(resultA, currentMeasurement.getResult());
+		assertNull(currentMeasurement.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
+		
+		//db status: 1 measurements from dt1DayAgo (TS = dt10MinAgo)
+		
+		////////////// Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
 		Thread.sleep(300);
-		dbService.deleteMeasurementFromEvent(event);
+		measurement = dbService.updateMeasurementFromEvent(event);
 		
 		currentMeasurement = dbService.getMeasurement(event.getStationId(), 
 				event.getMeasurementPointNumber(), 
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 		
-		assertNull(currentMeasurement);
+		history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(2, history.size());
+		Measurement oldM = history.getFirst();
+		Measurement newM = history.getLast();
+		
+		assertFalse(oldM.getIsCurrent());
+		assertEquals(stationId, oldM.getStationId());
+		assertEquals(resultA, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultB, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
+		
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(newM.getStationId(), oldM.getStationId());
+		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertEquals(newM, currentMeasurement);
+		
+		//db status: 2 measurements from dt1DayAgo (the active one with TS = dt5MinAgo)
+		
+		//////////////add measurement as if it would be read from API
+		Thread.sleep(300);
+		m1.setResult(resultB);
+		m1.setResultElevationCorrected(resultECB);
+		Measurement insertedMeasurement = addMeasurement(m1);	
+	
+		currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(), 
+				insertedMeasurement.getMeasurementPointNumber(), 
+				insertedMeasurement.getExaminationTypeSc(), 
+				insertedMeasurement.getMeasurementDateTime());
+		
+		assertEquals(insertedMeasurement, currentMeasurement);
 		
 		history = dbService.getMeasurementHistory(event.getStationId(), 
 				event.getMeasurementPointNumber(), 
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
-
+		
 		assertEquals(3, history.size());
-		olderM = history.getFirst();
+		Measurement olderM = history.getFirst();
 		oldM = history.get(1);
 		newM = history.getLast();
+		
 		assertFalse(olderM.getIsCurrent());
+		assertEquals(stationId, olderM.getStationId());
+		assertEquals(resultA, olderM.getResult());
+		assertNull(olderM.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
+		assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
+		
 		assertFalse(oldM.getIsCurrent());
-		assertFalse(newM.getIsCurrent());
+		assertNull(oldM.getResultElevationCorrected());		
+		assertEquals(resultB, oldM.getResult());
+		assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultB, newM.getResult());
+		assertEquals(resultECB, newM.getResultElevationCorrected());
+		assertNull(newM.getVandaEventTimestamp());
+		
+		assertEquals(olderM.getStationId(), oldM.getStationId());
 		assertTrue(olderM.getCreated().isBefore(oldM.getCreated()));
 		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(olderM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertEquals(newM.getStationId(), oldM.getStationId());
+		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertEquals(newM, currentMeasurement);
 		
-	}
-	
-	
-	/**
-	 * Test Scenario 3 assumes these steps:
-	 * 	- received measurement added  with TS NOW-10 min
-	 * 	- received measurement update with TS NOW-5 min
-	 * 	- read measurement from API   at NOW min
-	 * 
-	 * @throws SQLException
-	 */
-	@Test
-	public void testScenario3() throws SQLException {
-		
-		if (!enableTest) return;
-		
-		//TODO implement
+		//status: 3 measurement from dt1DayAgo (the active one with TS = null)
 	}
 	
 	/**
-	 * Test Scenario 4 assumes these steps:
+	 * Test Scenario 4 assumes these steps (in this order):
 	 *  - read measurement from API   at NOW min
 	 *  - received measurement added  with TS NOW-10 min - drop delayed event
 	 * 	- received measurement update with TS NOW-5 min - drop delayed event
 	 * 
 	 * @throws SQLException
+	 * @throws InterruptedException 
 	 */
 	@Test
-	public void testScenario4() throws SQLException {
+	public void testScenario4() throws SQLException, InterruptedException {
 		
 		if (!enableTest) return;
 		
-		//TODO implement
+		//////////////add measurement as if it would be read from API
+		m1.setResult(resultB);
+		m1.setResultElevationCorrected(resultECB);
+		Measurement insertedMeasurement = addMeasurement(m1);	
+	
+		Measurement currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(), 
+				insertedMeasurement.getMeasurementPointNumber(), 
+				insertedMeasurement.getExaminationTypeSc(), 
+				insertedMeasurement.getMeasurementDateTime());
+		
+		assertEquals(insertedMeasurement, currentMeasurement);
+		
+		List<Measurement> history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertTrue(currentMeasurement.getIsCurrent());
+		assertEquals(stationId, currentMeasurement.getStationId());
+		assertEquals(resultB, currentMeasurement.getResult());
+		assertEquals(resultECB, currentMeasurement.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
+		assertNull(currentMeasurement.getVandaEventTimestamp());
+	
+		//status: 1 measurement from dt1DayAgo (TS = null)
+		
+		////////////// Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Thread.sleep(300);
+		Measurement measurement = dbService.addMeasurementFromEvent(event);
+		
+		assertNull(measurement);
+		
+		currentMeasurement = dbService.getMeasurement(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertEquals(insertedMeasurement, currentMeasurement);
+		
+		//db status: 1 measurement, same history, the event was delayed and so dropped
+		
+		////////////// Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
+		Thread.sleep(300);
+		measurement = dbService.updateMeasurementFromEvent(event);
+		
+		currentMeasurement = dbService.getMeasurement(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertEquals(insertedMeasurement, currentMeasurement);
 	}
 	
 	/**
-	 * Test Scenario 5 assumes these steps:
+	 * Test Scenario 5 assumes these steps (in this order):
 	 * 	- received measurement update with TS NOW-5 min
 	 * 	- received measurement update with TS NOW min
 	 * 	- received measurement added  with TS NOW-10 min - drop delayed event
 	 * 
 	 * @throws SQLException
+	 * @throws InterruptedException 
 	 */
 	@Test
-	public void testScenario5() throws SQLException {
+	public void testScenario5() throws SQLException, InterruptedException {
 		
 		if (!enableTest) return;
 		
-		//TODO implement
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
+		Measurement measurement = dbService.updateMeasurementFromEvent(event);
+		
+		Measurement currentMeasurement = dbService.getMeasurement(measurement.getStationId(), 
+				measurement.getMeasurementPointNumber(), 
+				measurement.getExaminationTypeSc(), 
+				measurement.getMeasurementDateTime());
+		
+		List<Measurement> history = dbService.getMeasurementHistory(measurement.getStationId(), 
+				measurement.getMeasurementPointNumber(), 
+				measurement.getExaminationTypeSc(), 
+				measurement.getMeasurementDateTime());
+		
+		assertEquals(1, history.size());
+		
+		assertEquals(currentMeasurement, history.getFirst());
+		assertTrue(currentMeasurement.getIsCurrent());
+		assertEquals(stationId, currentMeasurement.getStationId());
+		assertEquals(resultB, currentMeasurement.getResult());
+		assertNull(currentMeasurement.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
+		assertEquals(dt5MinAgo, currentMeasurement.getVandaEventTimestamp());
+		
+		//db status: 1 measurements from dt1DayAgo (TS = dt5MinAgo)
+		
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultC); //same as the one from API
+		event.setRecordDateTime(dtNow);
+		measurement = dbService.updateMeasurementFromEvent(event);
+		
+		currentMeasurement = dbService.getMeasurement(measurement.getStationId(), 
+				measurement.getMeasurementPointNumber(), 
+				measurement.getExaminationTypeSc(), 
+				measurement.getMeasurementDateTime());
+		
+		history = dbService.getMeasurementHistory(measurement.getStationId(), 
+				measurement.getMeasurementPointNumber(), 
+				measurement.getExaminationTypeSc(), 
+				measurement.getMeasurementDateTime());
+		
+		assertEquals(2, history.size());
+		Measurement oldM = history.getFirst();
+		Measurement newM = history.getLast();
+		
+		assertFalse(oldM.getIsCurrent());
+		assertEquals(stationId, oldM.getStationId());
+		assertEquals(resultB, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
+		assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultC, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dtNow, newM.getVandaEventTimestamp());
+		
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(newM.getStationId(), oldM.getStationId());
+		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertEquals(newM, currentMeasurement);
+		
+		//db status: 2 measurements from dt1DayAgo (TS = dtNow)
+		
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Thread.sleep(300);
+		measurement = dbService.addMeasurementFromEvent(event);
+		
+		assertNull(measurement);
+		
+		currentMeasurement = dbService.getMeasurement(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		history = dbService.getMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(2, history.size());
+		oldM = history.getFirst();
+		newM = history.getLast();
+		
+		assertFalse(oldM.getIsCurrent());
+		assertEquals(stationId, oldM.getStationId());
+		assertEquals(resultB, oldM.getResult());
+		assertNull(oldM.getResultElevationCorrected());
+		assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
+		assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
+		
+		assertTrue(newM.getIsCurrent());
+		assertEquals(resultC, newM.getResult());
+		assertNull(newM.getResultElevationCorrected());
+		assertEquals(dtNow, newM.getVandaEventTimestamp());
+		
+		assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
+		assertEquals(newM.getStationId(), oldM.getStationId());
+		assertEquals(newM.getMeasurementDateTime(), oldM.getMeasurementDateTime());
+		assertEquals(newM, currentMeasurement);
+		
+		//db status: same history, delayed event dropped, 2 measurements from dt1DayAgo (TS = dtNow)
 	}
-	 
+	
+	
+	/**
+	 * Adding existing measurement again will add the data but generate a WARN
+	 * @throws SQLException
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testAddExistingMeasurement() throws SQLException, InterruptedException {
+
+		if (!enableTest) return;
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+			
+			//////////////Received event MeasurementAdded
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+			event.setResult(resultA);
+			event.setRecordDateTime(dt10MinAgo);
+			Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+			
+			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+					measurement1.getMeasurementPointNumber(), 
+					measurement1.getExaminationTypeSc(), 
+					measurement1.getMeasurementDateTime());
+			
+			assertEquals(1, nrMeas);
+			
+			//////////////Received event MeasurementAdded
+			Thread.sleep(300);
+			Measurement measurement2 = dbService.addMeasurementFromEvent(event);
+
+			nrMeas = dbService.countMeasurementHistory(measurement2.getStationId(), 
+					measurement2.getMeasurementPointNumber(), 
+					measurement2.getExaminationTypeSc(), 
+					measurement2.getMeasurementDateTime());
+			
+			assertEquals(2, nrMeas);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Added existing measurement")), times(1));
+		}
+		
+	}
+	
+	
+	/**
+	 * Test adding event where the examination type is missing from the DB should cast exception
+	 * @param event
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testAddMissingMeasurementType() throws SQLException {
+				
+		if (!enableTest) return;
+		
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setExaminationTypeSc(mtExamTypeSc0);
+		event.setRecordDateTime(dt10MinAgo);
+		
+		assertThrows(UnableToExecuteStatementException.class, () -> dbService.addMeasurementFromEvent(event));
+	}
+	
+	
+	/**
+	 * A delayed event will be dropped and will generate a WARN
+	 * @throws SQLException
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testDelayedAddEvent() throws SQLException, InterruptedException {
+
+		if (!enableTest) return;
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+			
+			//////////////Received event MeasurementUpdated
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+			event.setResult(resultB); //same as the one from API
+			event.setRecordDateTime(dt5MinAgo);
+			Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
+			
+			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+					measurement1.getMeasurementPointNumber(), 
+					measurement1.getExaminationTypeSc(), 
+					measurement1.getMeasurementDateTime());
+			
+			assertEquals(1, nrMeas);
+			
+			//////////////Received event MeasurementAdded
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+			event.setResult(resultA);
+			event.setRecordDateTime(dt10MinAgo);
+			Thread.sleep(300);
+			Measurement measurement2 = dbService.addMeasurementFromEvent(event);
+			
+			assertNull(measurement2);
+
+			nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+					event.getMeasurementPointNumber(), 
+					event.getExaminationTypeSc(), 
+					event.getMeasurementDateTime());
+			
+			assertEquals(1, nrMeas);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Delayed event received and dropped")), times(1));
+		}
+		
+	}
+	
+	
+	/**
+	 * Updating a non existent measurement will add the measurement but generate a WARN
+	 * @throws SQLException
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testUpdateNonExistingEvent() throws SQLException, InterruptedException {
+
+		if (!enableTest) return;
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+			
+			//////////////Received event MeasurementUpdated
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+			event.setResult(resultB); //same as the one from API
+			event.setRecordDateTime(dt5MinAgo);
+			Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Update on nonexistent measurement")), times(1));
+			
+			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+					measurement1.getMeasurementPointNumber(), 
+					measurement1.getExaminationTypeSc(), 
+					measurement1.getMeasurementDateTime());
+			
+			assertEquals(1, nrMeas);			
+		}
+		
+	}
+	
+	
+	/**
+	 * Test update event where the examination type is missing from the DB should cast exception
+	 * @param event
+	 * @throws SQLException 
+	 */
+	@Test
+	public void testUpdateMissingMeasurementType() throws SQLException {
+				
+		if (!enableTest) return;
+		
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultA);
+		event.setExaminationTypeSc(mtExamTypeSc0);
+		event.setRecordDateTime(dt10MinAgo);
+		
+		assertThrows(UnableToExecuteStatementException.class, () -> dbService.updateMeasurementFromEvent(event));
+	}
+	
+	
+	/**
+	 * Delayed update event is dropped and a WARN is generated
+	 * @throws InterruptedException
+	 * @throws SQLException
+	 */
+	@Test
+	public void testDelayedUpdateEvent() throws InterruptedException, SQLException {
+		
+		if (!enableTest) return;
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		
+			//////////////add measurement as if it would be read from API
+			
+			m1.setResult(resultA);
+			m1.setResultElevationCorrected(resultECA);
+			addMeasurement(m1);
+		
+			//////////////Received event MeasurementUpdated
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+			event.setResult(resultA); //same as the one from API
+			event.setRecordDateTime(dt5MinAgo);
+			Thread.sleep(300);
+			Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
+			
+			assertNull(measurement2);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Delayed event received and dropped")), times(1));
+		}
+	}
+	
+	/**
+	 * Delete event on non existing measurement should WARN
+	 * @throws SQLException 
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void testDeleteNonexistingMeasurement() throws SQLException, InterruptedException {
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+						
+			//////////////Received event MeasurementDelete
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
+			event.setResult(0.0);
+			event.setExaminationTypeSc(mtExamTypeSc1);
+			event.setRecordDateTime(dt10MinAgo);
+			dbService.deleteMeasurementFromEvent(event);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Delete of nonexistent measurement")), times(1));
+		}
+	}
+	
 	
 	private void addStations() {
 		
@@ -531,160 +1018,9 @@ public class DatabaseServiceTest {
 	
 	private Measurement addMeasurement(Measurement measurement) {
 	
-		Measurement insertedMeasurement = dbService.addMeasurement(measurement);
-		
-		assertEquals(stationId, insertedMeasurement.getStationId());
-		assertEquals(result1, insertedMeasurement.getResult());
-		assertEquals(resultEC1, insertedMeasurement.getResultElevationCorrected());
-		assertEquals(dt1DayAgo, insertedMeasurement.getMeasurementDateTime());
-		
-		Measurement readMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(), 
-					insertedMeasurement.getMeasurementPointNumber(), 
-					insertedMeasurement.getExaminationTypeSc(), 
-					insertedMeasurement.getMeasurementDateTime());
-		
-		assertEquals(stationId, readMeasurement.getStationId());
-		assertEquals(result1, readMeasurement.getResult());
-		assertEquals(resultEC1, readMeasurement.getResultElevationCorrected());
-		assertEquals(dt1DayAgo, readMeasurement.getMeasurementDateTime());
-		
-		return measurement;
+		dbService.inactivateMeasurementHistory(measurement);
+		return dbService.addMeasurement(measurement);
 	}
-	
-	/**
-	 * Adding existing measurement again will perform an update (new record) and a WARN
-	 * @param event
-	 * @throws SQLException
-	 */
-	private void addExistingMeasurementByEvent(EventModel event) throws SQLException {
-		
-		Measurement measurement;
-		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class)) {
-						
-			measurement = dbService.addMeasurementFromEvent(event);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), startsWith("Added existing measurement")), times(1));
-		}
-		
-		int nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
-				event.getMeasurementPointNumber(), 
-				measurement.getExaminationTypeSc(), 
-				event.getMeasurementDateTime());
-			
-		assertEquals(2, nrMeas);
-	}
-	
-	
-	private void addMissingMeasurementTypeByEvent(EventModel event) {
-				
-		assertThrows(SQLException.class, () -> dbService.addMeasurementFromEvent(event));
-	}
-	
-	private void updateExistingMeasurement(EventModel event) throws SQLException {
-		
-		Measurement measurement = dbService.updateMeasurementFromEvent(event);
-		
-		int nrMeas = dbService.countMeasurementHistory(measurement.getStationId(), 
-				measurement.getMeasurementPointNumber(), 
-				measurement.getExaminationTypeSc(), 
-				dtNow);
-			
-		assertEquals(1, nrMeas);
-		
-		nrMeas = dbService.countMeasurementHistory(measurement.getStationId(), 
-				measurement.getMeasurementPointNumber(), 
-				measurement.getExaminationTypeSc(), 
-				dt5MinAgo);
-			
-		assertEquals(3, nrMeas);
-		
-	}
-	
-	private void updateNonexistingMeasurement(EventModel event) throws SQLException {
-		Measurement measurement;
-		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class)) {
-			
-			measurement = dbService.updateMeasurementFromEvent(event);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), startsWith("Update on nonexistent measurement")), times(1));
-		}
-		
-		assertNull(measurement);
-				
-		int nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dtNow);
-					
-		assertEquals(1, nrMeas);
-		
-		nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dt5MinAgo);
-			
-		assertEquals(3, nrMeas);
-		
-	}
-	
-	private void deleteExistingMeasurement(EventModel event) {
-		
-		Measurement measurementBefore = dbService.getMeasurement(event.getStationId(), 
-				event.getMeasurementPointNumber(), 
-				mt1.getExaminationTypeSc(), event.getMeasurementDateTime());
-		
-		assertTrue(measurementBefore.getIsCurrent());
-		
-		dbService.deleteMeasurementFromEvent(event);
-		
-		List<Measurement> measurementHistory = dbService.getMeasurementHistory(measurementBefore.getStationId(), 
-				measurementBefore.getMeasurementPointNumber(), 
-				measurementBefore.getExaminationTypeSc(), measurementBefore.getMeasurementDateTime());
-		
-		measurementHistory.stream().forEach(m -> assertFalse(m.getIsCurrent()));
-				
-		int nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dtNow);
-							
-		assertEquals(1, nrMeas);
-				
-		nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dt5MinAgo);
-					
-		assertEquals(3, nrMeas);
-	}
-	
-	private void deleteNonexistingMeasurement(EventModel event) {
-		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class)) {
-			
-			dbService.deleteMeasurementFromEvent(event);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), startsWith("Delete of nonexistent measurement")), times(1));
-		}
-				
-		int nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dtNow);
-					
-		assertEquals(1, nrMeas);
-		
-		nrMeas = dbService.countMeasurementHistory(station1.getStationId(), 
-				measurementPoint1, 
-				mt1.getExaminationTypeSc(), //we know it should be this one 
-				dt5MinAgo);
-			
-		assertEquals(3, nrMeas);
-		
-	}
-	
 	
 	
 	private void testDeleteStation() {

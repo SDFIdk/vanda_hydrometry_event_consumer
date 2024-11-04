@@ -164,9 +164,7 @@ public class DatabaseService {
 	 * Performs the following operations:
 	 * 
 	 * - converts event to a measurement
-	 * - check if it is a delayed event
-	 * - if it is then drop it and WARN
-	 * - otherwise inactivate previous versions of this measurement, there should be some otherwise WARN
+	 * - inactivate previous versions of this measurement, there should be some otherwise WARN
 	 * - add current measurement as inactive
 	 * 
 	 * @param event
@@ -180,21 +178,15 @@ public class DatabaseService {
 		
 		Measurement measurement = EventMeasurementMapper.measurementFrom(event);
 		
-		boolean delayed = isEventDelayed(event);
+		//inactivate previous versions
+		int nr = measurementDao.inactivateMeasurementHistory(measurement);						
 		
-		if (!delayed) {			
-			//inactivate previous versions
-			int nr = measurementDao.inactivateMeasurementHistory(measurement);						
-			
-			if (nr == 0) {
-				VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
-			} else {
-				//add the new measurement as not current so that the timestamp is saved
-				measurement.setIsCurrent(false); //no record is current on deletion
-				newMeasurement = measurementDao.insertMeasurement(measurement);
-			}
+		if (nr == 0) {
+			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
 		} else {
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
+			//add the new measurement as not current so that the timestamp is saved
+			measurement.setIsCurrent(false); //no record is current on deletion
+			newMeasurement = measurementDao.insertMeasurement(measurement);
 		}
 		
 		return newMeasurement;
