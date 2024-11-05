@@ -964,7 +964,6 @@ public class DatabaseServiceTest {
 		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
 		
 			//////////////add measurement as if it would be read from API
-			
 			m1.setResult(resultA);
 			m1.setResultElevationCorrected(resultECA);
 			addMeasurement(m1);
@@ -991,6 +990,8 @@ public class DatabaseServiceTest {
 	@Test
 	public void testDeleteNonexistingMeasurement() throws SQLException, InterruptedException {
 		
+		if (!enableTest) return;
+		
 		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
 						
 			//////////////Received event MeasurementDelete
@@ -1005,6 +1006,56 @@ public class DatabaseServiceTest {
 		}
 	}
 	
+	
+	/**
+	 * A delayed event after a delete event will be dropped and no active record is registered
+	 *  
+	 * @throws SQLException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testEarlyDeleteEvent() throws SQLException, InterruptedException {
+		
+		if (!enableTest) return;
+		
+		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+					
+			//////////////Received event MeasurementAdded
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+			event.setResult(resultA);
+			event.setRecordDateTime(dt10MinAgo);
+			Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+			
+			assertNotNull(measurement1);
+			
+			//////////////Received event MeasurementDelete
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
+			event.setResult(0.0);
+			event.setExaminationTypeSc(mtExamTypeSc1);
+			event.setRecordDateTime(dtNow);
+			Thread.sleep(300);
+			dbService.deleteMeasurementFromEvent(event);
+			
+			//////////////Received event MeasurementUpdated
+			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+			event.setResult(resultB); 
+			event.setRecordDateTime(dt5MinAgo);
+			Thread.sleep(300);
+			Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
+			
+			assertNull(measurement2);
+			
+			Measurement currentMeasurement = dbService.getMeasurement(event.getStationId(), 
+					event.getMeasurementPointNumber(), 
+					event.getExaminationTypeSc(), 
+					event.getMeasurementDateTime());
+			
+			assertNull(currentMeasurement);
+			
+			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
+					startsWith("Delayed event received and dropped")), times(1));
+		}
+	}
 	
 	private void addStations() {
 		

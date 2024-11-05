@@ -129,7 +129,7 @@ public class VandaHEventProcessorTest {
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
 		event.setUnitSc(0);
 		event.setParameterSc(0);
-		event.setResult(null);
+		event.setResult(0.0);
 		
 		verify(dbService).deleteMeasurementFromEvent(event);
 	}
