@@ -29,8 +29,8 @@ public class VandaHEventConsumerConfig {
 	@Value("${savedb:#{null}}")
 	private String saveDb;  //boolean
 	
-	@Value("${loggingEvents:false,info,all}")
-	private String loggingEvents;
+	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents:false,info,all}")
+	public String loggingEvents;
 	
 	@Value("${events:#{null}}")
 	private String events;
@@ -147,19 +147,19 @@ public class VandaHEventConsumerConfig {
 
 	@Override
 	public String toString() {
-		return "VandaHEventConsumerConfig [examinationTypeSc=" + examinationTypeSc + 
-				", command=" + getCommand()
-				+ ", isVerbose=" + isVerbose() + 
-				", isDisplayAll=" + isDisplayAll() +
-				", isDisplayData=" + isDisplayData() + 
-				", isDisplayRawData=" + isDisplayRawData() + 
-				", isSaveDb=" + isSaveDb() + 
-				", getReportPeriodSec=" + getReportPeriodSec() +
-				", loggingEvents=" + isLoggingEvents() +
-				", loggingAllEvents=" + isLoggingAllEvents() +
-				", loggingEventsLevel=" + getLoggingEventsLevel() +
-				", events=" + events
-				+ "]";
+		return "VandaHEventConsumerConfig [\nexaminationTypeSc=" + examinationTypeSc + 
+				",\ncommand=" + getCommand() +
+				",\nisVerbose=" + isVerbose() + 
+				",\nisDisplayAll=" + isDisplayAll() +
+				",\nisDisplayData=" + isDisplayData() + 
+				",\nisDisplayRawData=" + isDisplayRawData() + 
+				",\nisSaveDb=" + isSaveDb() + 
+				",\ngetReportPeriodSec=" + getReportPeriodSec() +
+				",\nloggingEvents=" + isLoggingEvents() +
+				",\nloggingAllEvents=" + isLoggingAllEvents() +
+				",\nloggingEventsLevel=" + getLoggingEventsLevel() +
+				",\nevents=" + events
+				+ "\n]";
 	}
 
 
