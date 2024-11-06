@@ -40,8 +40,9 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 				VandaHUtility.logAndPrint(null, null, true, "Vanda Hydrometry Event Consumer\n=====================\nUsage parameters: start [--options[=value]]");
 				VandaHUtility.logAndPrint(null, null, true, VandaHUtility.BOLD_ON + "start" + VandaHUtility.FORMAT_OFF + " commands will start the event hub client that will receive and process events.\n");
 				
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayRawData to display the API results at the console.");
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayData to display the mapped data at the console.");
+				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayRawData to display the received (and processed) raw json events to the console.");
+				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayAll to display all the received (not only processed) raw json events to the console.");
+				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayData to display the mapped data at the console (only processed events).");
 				VandaHUtility.logAndPrint(null, null, true, "Use the option --verbose to display more info at the console.");
 				VandaHUtility.logAndPrint(null, null, true, "Use the option --saveDb to save the results in the defined database.");
 			}

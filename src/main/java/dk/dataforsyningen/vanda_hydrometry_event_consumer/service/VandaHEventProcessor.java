@@ -35,6 +35,7 @@ public class VandaHEventProcessor {
 	private HashMap<Integer, Long> minOffset = new HashMap<>();
 	private HashMap<Integer, Long> maxOffset = new HashMap<>();
 	
+	private long lastReportTS = 0L;
 	private long eventCounter = 0l;
 	private long eventCounterAdd = 0l;
 	private long eventCounterUpd = 0l;
@@ -54,6 +55,21 @@ public class VandaHEventProcessor {
     public void consume(ConsumerRecord<String, String> record
     		/*, Acknowledgment acknowledgment*/
     		) {
+		
+		String rawMessage = "Raw Message -> Key: " + record.key() + 
+				", Value: " + record.value() + 
+				" [offset=" + record.offset() + 
+				"; partition=" + record.partition() + 
+				"; ts=" + record.timestamp() + "]";
+		
+		if (config.isDisplayAll()) {
+	        System.out.println(rawMessage);
+		}
+		
+		if (config.isLoggingAllEvents()) {
+			VandaHUtility.logAndPrint(log, config.getLoggingEventsLevel(), false, rawMessage); 
+		}
+		
 		try {
 			// Process each message consumed from Azure Event Hub
 			EventModel event = EventModel.fromJson(record.value());
@@ -64,13 +80,12 @@ public class VandaHEventProcessor {
 			//skip undesired events
 			if (acceptEvent(event)) {
 				
-				if (config.isDisplayRawData()) {
-			        System.out.printf("Raw Message -> Key: %s, Value: %s [offset=%s; partition=%s; ts=%s]%n", 
-			        		record.key(), 
-			        		record.value(),
-			        		record.offset(),
-			        		record.partition(),
-			        		record.timestamp());
+				if (config.isLoggingEvents() && !config.isLoggingAllEvents()) {
+					VandaHUtility.logAndPrint(log, config.getLoggingEventsLevel(), false, rawMessage);
+				}
+				
+				if (config.isDisplayRawData() && !config.isDisplayAll()) {
+			        System.out.println(rawMessage);
 				}
 				
 				if (config.isDisplayData()) {
@@ -90,10 +105,7 @@ public class VandaHEventProcessor {
 						eventCounterUpd++;
 						
 					} else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
-						
-						//TODO this should be delete at some point. I just wanted to see the delete record since it is so rare
-						VandaHUtility.logAndPrint(log, Level.INFO, true, record.value());
-						
+												
 						dbService.deleteMeasurementFromEvent(event);
 						eventCounterDel++;
 					}
@@ -125,7 +137,9 @@ public class VandaHEventProcessor {
 				VandaHUtility.logAndPrint(null, null, config.isVerbose(), 
 						(new Date()) + ": Received " + eventCounter + "/" + eventCounterTotal + 
 						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel + 
-						") within " + config.getReportPeriodSec() + " sec"); 
+						") " + 
+						(lastReportTS > 0 ? ("within " + (int)((now - lastReportTS)/1000) + " sec") : "")
+						); 
 				eventCounter = 0;
 				
 				//display offset min/max
@@ -137,6 +151,7 @@ public class VandaHEventProcessor {
 				}
 				s += "data between " + minRecordTime + " and " + maxRecordTime;
 				VandaHUtility.logAndPrint(null, null, config.isVerbose(), s);
+				lastReportTS = now;
 			}
 	        
 	        /*acknowledgment.acknowledge();*/

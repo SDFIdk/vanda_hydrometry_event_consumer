@@ -3,6 +3,7 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,11 +20,17 @@ public class VandaHEventConsumerConfig {
 	@Value("${displaydata:#{null}}")
 	private String displayData;  //boolean
 	
+	@Value("${displayall:#{null}}")
+	private String displayAll;  //boolean
+	
 	@Value("${displayrawdata:#{null}}")
 	private String displayRawData;  //boolean
 	
 	@Value("${savedb:#{null}}")
 	private String saveDb;  //boolean
+	
+	@Value("${loggingEvents:false,info,all}")
+	private String loggingEvents;
 	
 	@Value("${events:#{null}}")
 	private String events;
@@ -72,6 +79,10 @@ public class VandaHEventConsumerConfig {
 		return displayRawData != null;
 	}
 	
+	public boolean isDisplayAll() {
+		return displayAll != null;
+	}	
+	
 	public boolean isSaveDb() {
 		return saveDb != null;
 	}
@@ -99,6 +110,25 @@ public class VandaHEventConsumerConfig {
 	public boolean isEnableDbTest() {
 		return enableDbTest;
 	}
+	
+	public boolean isLoggingEvents() {
+		return loggingEvents != null && loggingEvents.startsWith("true");
+	}
+	
+	public boolean isLoggingAllEvents() {
+		return isLoggingEvents() && loggingEvents.endsWith("all");
+	}
+	
+	public Level getLoggingEventsLevel() {
+		if (loggingEvents != null && loggingEvents.toLowerCase().indexOf(",info,") != -1) {
+			return Level.INFO;
+		} else if (loggingEvents != null && loggingEvents.toLowerCase().indexOf(",debug,") != -1) {
+			return Level.DEBUG;
+		} else if (loggingEvents != null && loggingEvents.indexOf(",trace,") != -1) {
+			return Level.TRACE;
+		} 
+		return null;
+	}
 
 	public List<Integer> getExaminationTypeSc() {
 		ArrayList<Integer> output = new ArrayList<>();
@@ -120,10 +150,14 @@ public class VandaHEventConsumerConfig {
 		return "VandaHEventConsumerConfig [examinationTypeSc=" + examinationTypeSc + 
 				", command=" + getCommand()
 				+ ", isVerbose=" + isVerbose() + 
+				", isDisplayAll=" + isDisplayAll() +
 				", isDisplayData=" + isDisplayData() + 
 				", isDisplayRawData=" + isDisplayRawData() + 
 				", isSaveDb=" + isSaveDb() + 
 				", getReportPeriodSec=" + getReportPeriodSec() +
+				", loggingEvents=" + isLoggingEvents() +
+				", loggingAllEvents=" + isLoggingAllEvents() +
+				", loggingEventsLevel=" + getLoggingEventsLevel() +
 				", events=" + events
 				+ "]";
 	}

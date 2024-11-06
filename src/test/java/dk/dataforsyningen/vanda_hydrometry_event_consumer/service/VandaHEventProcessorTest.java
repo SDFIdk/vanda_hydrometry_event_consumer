@@ -1,6 +1,7 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +29,7 @@ public class VandaHEventProcessorTest {
 	
 	private String measurementAdded = "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1233,\"UnitSc\":19,\"Result\":1376.9,\"ReasonCodeSc\":5}";
 	private String measurementUpdated = "{\"EventType\":\"MeasurementUpdated\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":82.2,\"ReasonCodeSc\":5}";
-	private String measurementDeleted = "{\"EventType\":\"MeasurementDeleted\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"Result\":0,\"ReasonCodeSc\":5}";
+	private String measurementDeleted = "{\"EventType\":\"MeasurementDeleted\",\"StationId\":\"12345678\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\"}";
 	
 	private String irelevantMeasurement = "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"70000278\",\"OperatorStationId\":\"WATSONC-1518\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":29,\"MeasurementDateTime\":\"2024-10-05T00:00:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1154,\"UnitSc\":29,\"Result\":11.1}";
 	
@@ -131,7 +133,17 @@ public class VandaHEventProcessorTest {
 		event.setParameterSc(0);
 		event.setResult(0.0);
 		
-		verify(dbService).deleteMeasurementFromEvent(event);
+		verify(dbService).deleteMeasurementFromEvent(argThat(new ArgumentMatcher<EventModel>() {
+
+			@Override
+			public boolean matches(EventModel e) {
+				return event.getStationId().equals(e.getStationId()) &&
+						event.getMeasurementPointNumber() == e.getMeasurementPointNumber() &&
+						event.getExaminationTypeSc() == e.getExaminationTypeSc() &&
+						event.getMeasurementDateTime().equals(e.getMeasurementDateTime());
+			}
+			
+		}));
 	}
 	
 }
