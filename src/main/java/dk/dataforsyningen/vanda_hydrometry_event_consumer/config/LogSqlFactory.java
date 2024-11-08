@@ -47,7 +47,7 @@ public @interface LogSqlFactory {
         	if (context.getStatement() == null) {
              sql = context.getRawSql();
         	}
-        	log.debug("Statement SQL:\n" + sql);
+        	log.trace("Statement SQL:\n" + sql);
         }
     }
 }

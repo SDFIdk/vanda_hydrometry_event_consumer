@@ -1,15 +1,22 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -41,10 +48,16 @@ public class VandaHEventConsumerRunnerTest {
 		
 		String[] args = new String[0];
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class)) {
-			runner.run(args);
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(eq(null), eq(null), eq(true), startsWith("Vanda Hydrometry Event Consumer")), times(1));
-		}
+		final PrintStream oldStdout = System.out;
+		ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(bo));
+		
+		runner.run(args);
+		
+		bo.flush();
+		System.setOut(oldStdout);
+        String allWrittenLines = new String(bo.toByteArray()); 
+        assertTrue(allWrittenLines.contains("Vanda Hydrometry Event Consumer"));
 	}
 	
 	@Test

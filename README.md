@@ -54,6 +54,12 @@ Because the events in the stream get received through several parallel partition
 
 Note that the API retrieved data, since they are not events, they do not contain a TS but they have a creation TS (when they were retrieved, which is also the latest true value at that moment). Therefore the event's TS is compared with record's creation date when an event has to be compared against an API data to determine if it is delayed.
 
+### Logging
+
+Activate debug level for logging to get received raw event into the log file. Activate trace level to get both raw events and executed queries into the log file.
+
+The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" in application.properties should also be set to "all" or "processed".
+
 ## Usage
 
 This section shows the operations and parameters that can be used with the application. In order to run the application from the command line (console) use this command:
@@ -90,9 +96,13 @@ In order to display the raw json data received from the event hub use the follow
 	
 ### More output
 
-In order to display more details about the execution of the program or warnings in the console use the parameter "verbose". 
+In order to display running statistics use the parameter "verbose". 
 
 	start --verbose	
+	
+The statistics are displayed when events are received but with a minimum period define by "dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec" in application.properties. 
+If the time between events is greater the statistic reporting period can be longer.
+
 	
 ### Save to DB
 

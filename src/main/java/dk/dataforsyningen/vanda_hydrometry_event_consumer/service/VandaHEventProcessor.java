@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
@@ -30,7 +29,7 @@ public class VandaHEventProcessor {
 	@Autowired
 	private DatabaseService dbService;
 	
-	private final Logger log = LoggerFactory.getLogger(VandaHEventProcessor.class);
+	private final Logger logger = LoggerFactory.getLogger(VandaHEventProcessor.class);
 	
 	private HashMap<Integer, Long> minOffset = new HashMap<>();
 	private HashMap<Integer, Long> maxOffset = new HashMap<>();
@@ -67,7 +66,7 @@ public class VandaHEventProcessor {
 		}
 		
 		if (config.isLoggingAllEvents()) {
-			VandaHUtility.logAndPrint(log, config.getLoggingEventsLevel(), false, rawMessage); 
+			logger.debug(rawMessage);
 		}
 		
 		try {
@@ -80,8 +79,8 @@ public class VandaHEventProcessor {
 			//skip undesired events
 			if (acceptEvent(event)) {
 				
-				if (config.isLoggingEvents() && !config.isLoggingAllEvents()) {
-					VandaHUtility.logAndPrint(log, config.getLoggingEventsLevel(), false, rawMessage);
+				if (config.isLoggingProcessedEvents()) {
+					logger.debug(rawMessage);
 				}
 				
 				if (config.isDisplayRawData() && !config.isDisplayAll()) {
@@ -134,29 +133,29 @@ public class VandaHEventProcessor {
 			long now = System.currentTimeMillis();
 			if (config.getReportPeriodSec() > 0 && now >  counterReportTimer + config.getReportPeriodSec() * 1000) {
 				counterReportTimer = now; 
-				VandaHUtility.logAndPrint(null, null, config.isVerbose(), 
-						(new Date()) + ": Received " + eventCounter + "/" + eventCounterTotal + 
+				String msg = 
+						"Received " + eventCounter + "/" + eventCounterTotal + 
 						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel + 
 						") " + 
-						(lastReportTS > 0 ? ("within " + (int)((now - lastReportTS)/1000) + " sec") : "")
-						); 
+						(lastReportTS > 0 ? ("within " + (int)((now - lastReportTS)/1000) + " sec") : "") + 
+						"\n";
 				eventCounter = 0;
 				
 				//display offset min/max
-				String s = "";
 				for(int p : minOffset.keySet()) {
 					long mO = minOffset.get(p);
 					long MO = maxOffset.containsKey(p) ? maxOffset.get(p) : 0;
-					s += "min/max for part " + p + ": " + mO + "/" + MO + "; ";
+					msg += "min/max for part " + p + ": " + mO + "/" + MO + "; ";
 				}
-				s += "data between " + minRecordTime + " and " + maxRecordTime;
-				VandaHUtility.logAndPrint(null, null, config.isVerbose(), s);
+				msg += "data between " + minRecordTime + " and " + maxRecordTime;
 				lastReportTS = now;
+				
+				if (config.isVerbose()) { System.out.println((new Date()) + ": " + msg); } else {	logger.info(msg); }
 			}
 	        
 	        /*acknowledgment.acknowledge();*/
 		} catch (Exception e) {
-			VandaHUtility.logAndPrint(log, Level.ERROR, false, "Error processing message: " + e.getMessage(), e);
+			logger.error("Error processing message: " + e.getMessage(), e);
         }
     }
 	
@@ -177,7 +176,7 @@ public class VandaHEventProcessor {
         MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("DMPEventHub");
         if (listenerContainer != null && !listenerContainer.isRunning()) {
             listenerContainer.start();  // Start the listener
-            VandaHUtility.logAndPrint(log, Level.INFO, config.isVerbose(), "Kafka Listener started...");
+            logger.info("Kafka Listener started...");
         }
     }
 
@@ -186,7 +185,7 @@ public class VandaHEventProcessor {
         MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("DMPEventHub");
         if (listenerContainer != null && listenerContainer.isRunning()) {
             listenerContainer.stop();  // Stop the listener
-            VandaHUtility.logAndPrint(log, Level.INFO, config.isVerbose(), "Kafka Listener stopped.");
+            logger.info("Kafka Listener stopped.");
         }
     }
 	

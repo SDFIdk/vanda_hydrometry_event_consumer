@@ -8,11 +8,9 @@ import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementTypeDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.StationDao;
@@ -30,7 +28,7 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
 @Service
 public class DatabaseService {
 
-	private final Logger log = LoggerFactory.getLogger(DatabaseService.class);
+	private static Logger logger = LoggerFactory.getLogger(DatabaseService.class);
 	
 	private StationDao stationDao;
 	private MeasurementDao measurementDao;
@@ -102,7 +100,7 @@ public class DatabaseService {
 			int nr = measurementDao.inactivateMeasurementHistory(measurement);
 				
 			if (nr > 0) {
-				VandaHUtility.logAndPrint(log, Level.WARN, false, "Added existing measurement: " + measurement);
+				logger.warn("Added existing measurement: " + measurement);
 			}
 			
 			measurement.setIsCurrent(true); //make sure this will be the current measurement
@@ -110,7 +108,7 @@ public class DatabaseService {
 			//add the new measurement
 			newMeasurement = measurementDao.insertMeasurement(measurement);
 		} else {
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
+			logger.warn("Delayed event received and dropped: " + event);
 		}
 		
 		return newMeasurement;
@@ -144,7 +142,7 @@ public class DatabaseService {
 			int nr = measurementDao.inactivateMeasurementHistory(measurement);
 			
 			if (nr == 0) {	
-				VandaHUtility.logAndPrint(log, Level.WARN, false, "Update on nonexistent measurement " + measurement + ". Measurement inserted as new!");
+				logger.warn("Update on nonexistent measurement " + measurement + ". Measurement inserted as new!");
 			}
 				
 			measurement.setIsCurrent(true); //make sure this will be the current measurement
@@ -153,7 +151,7 @@ public class DatabaseService {
 			newMeasurement = measurementDao.insertMeasurement(measurement);
 		
 		} else {
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delayed event received and dropped: " + event);
+			logger.warn("Delayed event received and dropped: " + event);
 		}
 		
 		return newMeasurement;
@@ -182,7 +180,7 @@ public class DatabaseService {
 		int nr = measurementDao.inactivateMeasurementHistory(measurement);						
 		
 		if (nr == 0) {
-			VandaHUtility.logAndPrint(log, Level.WARN, false, "Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
+			logger.warn("Delete of nonexistent measurement (examinationType=" + event.getExaminationTypeSc() + ") " + measurement + ". No deletion!");			
 		} else {
 			//add the new measurement as not current so that the timestamp is saved
 			measurement.setIsCurrent(false); //no record is current on deletion

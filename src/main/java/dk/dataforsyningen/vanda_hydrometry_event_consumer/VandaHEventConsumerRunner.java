@@ -13,7 +13,7 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.service.VandaHEventPro
 @Component
 public class VandaHEventConsumerRunner implements CommandLineRunner {
 
-	private final Logger log = LoggerFactory.getLogger(VandaHEventConsumerRunner.class);
+	private final Logger logger = LoggerFactory.getLogger(VandaHEventConsumerRunner.class);
 	
 	@Autowired
 	VandaHEventConsumerConfig config;
@@ -23,11 +23,10 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 	
 	@Override
 	public void run(String... args) throws Exception {
-		VandaHUtility.logAndPrint(log, Level.INFO, config.isVerbose(), "Application start ...");
+		logger.info("Application start ...");
 		
 		String command = config.parseCommands(args);
-		VandaHUtility.logAndPrint(log, Level.DEBUG, false, "Execute command: " + command);
-		VandaHUtility.logAndPrint(log, Level.DEBUG, false, "with config: " + config.toString());
+		logger.info("Execute command: " + command + "\nwith config: " + config.toString());
 		
 		try {
 		
@@ -37,24 +36,22 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 				//TODO: implement logic to stop if necessary
 				//eventConsumer.stopListener();
 			} else {
-				VandaHUtility.logAndPrint(null, null, true, "Vanda Hydrometry Event Consumer\n=====================\nUsage parameters: start [--options[=value]]");
-				VandaHUtility.logAndPrint(null, null, true, VandaHUtility.BOLD_ON + "start" + VandaHUtility.FORMAT_OFF + " commands will start the event hub client that will receive and process events.\n");
+				System.out.println("Vanda Hydrometry Event Consumer\n=====================\nUsage parameters: start [--options[=value]]");
+				System.out.println(VandaHUtility.BOLD_ON + "start" + VandaHUtility.FORMAT_OFF + " commands will start the event hub client that will receive and process events.\n");
 				
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayRawData to display the received (and processed) raw json events to the console.");
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayAll to display all the received (not only processed) raw json events to the console.");
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --displayData to display the mapped data at the console (only processed events).");
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --verbose to display more info at the console.");
-				VandaHUtility.logAndPrint(null, null, true, "Use the option --saveDb to save the results in the defined database.");
+				System.out.println("Use the option --displayRawData to display the received (and processed) raw json events to the console.");
+				System.out.println("Use the option --displayAll to display all the received (not only processed) raw json events to the console.");
+				System.out.println("Use the option --displayData to display the mapped data at the console (only processed events).");
+				System.out.println("Use the option --verbose to display more info at the console.");
+				System.out.println("Use the option --saveDb to save the results in the defined database.");
 			}
 			
 		} catch (Exception ex) {
-			VandaHUtility.logAndPrint(log, Level.ERROR, false, "Error executing command '" + command + "'", ex);
+			logger.error("Error executing command '" + command + "'", ex);
 			System.exit(1);
 		}
 		
-		
-		VandaHUtility.logAndPrint(log, Level.INFO, config.isVerbose(), "Application ended.");
-
+		logger.info("Application ended.");
 	}
 
 }

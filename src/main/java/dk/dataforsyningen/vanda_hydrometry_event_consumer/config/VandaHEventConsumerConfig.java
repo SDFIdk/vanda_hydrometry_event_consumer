@@ -29,7 +29,7 @@ public class VandaHEventConsumerConfig {
 	@Value("${savedb:#{null}}")
 	private String saveDb;  //boolean
 	
-	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents:false,info,all}")
+	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents:#{null}}")
 	public String loggingEvents;
 	
 	@Value("${events:#{null}}")
@@ -111,25 +111,14 @@ public class VandaHEventConsumerConfig {
 		return enableDbTest;
 	}
 	
-	public boolean isLoggingEvents() {
-		return loggingEvents != null && loggingEvents.startsWith("true");
+	public boolean isLoggingProcessedEvents() {
+		return loggingEvents != null && loggingEvents.toLowerCase().equals("processed");
 	}
 	
 	public boolean isLoggingAllEvents() {
-		return isLoggingEvents() && loggingEvents.endsWith("all");
+		return loggingEvents != null && loggingEvents.toLowerCase().equals("all");
 	}
 	
-	public Level getLoggingEventsLevel() {
-		if (loggingEvents != null && loggingEvents.toLowerCase().indexOf(",info,") != -1) {
-			return Level.INFO;
-		} else if (loggingEvents != null && loggingEvents.toLowerCase().indexOf(",debug,") != -1) {
-			return Level.DEBUG;
-		} else if (loggingEvents != null && loggingEvents.indexOf(",trace,") != -1) {
-			return Level.TRACE;
-		} 
-		return null;
-	}
-
 	public List<Integer> getExaminationTypeSc() {
 		ArrayList<Integer> output = new ArrayList<>();
 		if (examinationTypeSc != null && examinationTypeSc.length() > 0) {
@@ -155,9 +144,8 @@ public class VandaHEventConsumerConfig {
 				",\nisDisplayRawData=" + isDisplayRawData() + 
 				",\nisSaveDb=" + isSaveDb() + 
 				",\ngetReportPeriodSec=" + getReportPeriodSec() +
-				",\nloggingEvents=" + isLoggingEvents() +
+				",\nloggingProcessedEvents=" + isLoggingProcessedEvents() +
 				",\nloggingAllEvents=" + isLoggingAllEvents() +
-				",\nloggingEventsLevel=" + getLoggingEventsLevel() +
 				",\nevents=" + events
 				+ "\n]";
 	}

@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -20,9 +20,8 @@ import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.slf4j.event.Level;
+import org.slf4j.Logger;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -928,42 +927,48 @@ public class DatabaseServiceTest {
 	 * 
 	 * @throws SQLException
 	 * @throws InterruptedException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testAddExistingMeasurement() throws SQLException, InterruptedException {
+	public void testAddExistingMeasurement() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
-			
-			//////////////Received event MeasurementAdded
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
-			event.setResult(resultA);
-			event.setRecordDateTime(dt10MinAgo);
-			Measurement measurement1 = dbService.addMeasurementFromEvent(event);
-			
-			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
-					measurement1.getMeasurementPointNumber(), 
-					measurement1.getExaminationTypeSc(), 
-					measurement1.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);
-			
-			//////////////Received event MeasurementAdded
-			Thread.sleep(300);
-			event.setRecordDateTime(dt5MinAgo); //this is fake to test hypothetical case
-			Measurement measurement2 = dbService.addMeasurementFromEvent(event);
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
+					
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+		
+		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+				measurement1.getMeasurementPointNumber(), 
+				measurement1.getExaminationTypeSc(), 
+				measurement1.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);
+		
+		//////////////Received event MeasurementAdded
+		Thread.sleep(300);
+		event.setRecordDateTime(dt5MinAgo); //this is fake to test hypothetical case
+		Measurement measurement2 = dbService.addMeasurementFromEvent(event);
 
-			nrMeas = dbService.countMeasurementHistory(measurement2.getStationId(), 
-					measurement2.getMeasurementPointNumber(), 
-					measurement2.getExaminationTypeSc(), 
-					measurement2.getMeasurementDateTime());
-			
-			assertEquals(2, nrMeas);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Added existing measurement")), times(1));
-		}
+		nrMeas = dbService.countMeasurementHistory(measurement2.getStationId(), 
+				measurement2.getMeasurementPointNumber(), 
+				measurement2.getExaminationTypeSc(), 
+				measurement2.getMeasurementDateTime());
+		
+		assertEquals(2, nrMeas);
+		
+		verify(log, times(1)).warn(startsWith("Added existing measurement"));
 		
 	}
 	
@@ -993,45 +998,51 @@ public class DatabaseServiceTest {
 	 * @param event
 	 * @throws SQLException 
 	 * @throws InterruptedException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testReceivingEventTwice() throws SQLException, InterruptedException {
+	public void testReceivingEventTwice() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 				
 		if (!enableTest) return;
 
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 			
-			//////////////Received event MeasurementAdded
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
-			event.setResult(resultA);
-			event.setRecordDateTime(dt10MinAgo);
-			Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+		
+		assertNotNull(measurement1);
+		
+		int nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);
+		
+		//same event again
+		Thread.sleep(300);
+		Measurement measurement2 = dbService.addMeasurementFromEvent(event);
+		
+		assertNull(measurement2);
+		
+		nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);
 			
-			assertNotNull(measurement1);
-			
-			int nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), 
-					event.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);
-			
-			//same event again
-			Thread.sleep(300);
-			Measurement measurement2 = dbService.addMeasurementFromEvent(event);
-			
-			assertNull(measurement2);
-			
-			nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), 
-					event.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Delayed event received and dropped")), times(1));
-		}
+		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
 	
 	
@@ -1039,47 +1050,52 @@ public class DatabaseServiceTest {
 	 * A delayed event will be dropped and will generate a WARN
 	 * @throws SQLException
 	 * @throws InterruptedException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testDelayedAddEvent() throws SQLException, InterruptedException {
+	public void testDelayedAddEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 			
-			//////////////Received event MeasurementUpdated
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-			event.setResult(resultB); //same as the one from API
-			event.setRecordDateTime(dt5MinAgo);
-			Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
-			
-			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
-					measurement1.getMeasurementPointNumber(), 
-					measurement1.getExaminationTypeSc(), 
-					measurement1.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);
-			
-			//////////////Received event MeasurementAdded
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
-			event.setResult(resultA);
-			event.setRecordDateTime(dt10MinAgo);
-			Thread.sleep(300);
-			Measurement measurement2 = dbService.addMeasurementFromEvent(event);
-			
-			assertNull(measurement2);
-
-			nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), 
-					event.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Delayed event received and dropped")), times(1));
-		}
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
+		Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
 		
+		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+				measurement1.getMeasurementPointNumber(), 
+				measurement1.getExaminationTypeSc(), 
+				measurement1.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);
+		
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Thread.sleep(300);
+		Measurement measurement2 = dbService.addMeasurementFromEvent(event);
+		
+		assertNull(measurement2);
+
+		nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);
+			
+		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
 	
 	
@@ -1087,30 +1103,36 @@ public class DatabaseServiceTest {
 	 * Updating a non existent measurement will add the measurement but generate a WARN
 	 * @throws SQLException
 	 * @throws InterruptedException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testUpdateNonExistingEvent() throws SQLException, InterruptedException {
+	public void testUpdateNonExistingEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 			
-			//////////////Received event MeasurementUpdated
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-			event.setResult(resultB); //same as the one from API
-			event.setRecordDateTime(dt5MinAgo);
-			Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Update on nonexistent measurement")), times(1));
-			
-			int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
-					measurement1.getMeasurementPointNumber(), 
-					measurement1.getExaminationTypeSc(), 
-					measurement1.getMeasurementDateTime());
-			
-			assertEquals(1, nrMeas);			
-		}
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
+		Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
+		
+		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+				measurement1.getMeasurementPointNumber(), 
+				measurement1.getExaminationTypeSc(), 
+				measurement1.getMeasurementDateTime());
+		
+		assertEquals(1, nrMeas);			
+		
+		verify(log, times(1)).warn(startsWith("Update on nonexistent measurement"));
 	}
 	
 	
@@ -1138,55 +1160,67 @@ public class DatabaseServiceTest {
 	 * Delayed update event is dropped and a WARN is generated
 	 * @throws InterruptedException
 	 * @throws SQLException
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testDelayedUpdateEvent() throws InterruptedException, SQLException {
+	public void testDelayedUpdateEvent() throws InterruptedException, SQLException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 		
-			//////////////add measurement as if it would be read from API
-			m1.setResult(resultA);
-			m1.setResultElevationCorrected(resultECA);
-			addMeasurement(m1);
+		//////////////add measurement as if it would be read from API
+		m1.setResult(resultA);
+		m1.setResultElevationCorrected(resultECA);
+		addMeasurement(m1);
+	
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultA); //same as the one from API
+		event.setRecordDateTime(dt5MinAgo);
+		Thread.sleep(300);
+		Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
 		
-			//////////////Received event MeasurementUpdated
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-			event.setResult(resultA); //same as the one from API
-			event.setRecordDateTime(dt5MinAgo);
-			Thread.sleep(300);
-			Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
-			
-			assertNull(measurement2);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Delayed event received and dropped")), times(1));
-		}
+		assertNull(measurement2);
+		
+		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
 	
 	/**
 	 * Delete event on non existing measurement should WARN
 	 * @throws SQLException 
 	 * @throws InterruptedException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testDeleteNonexistingMeasurement() throws SQLException, InterruptedException {
+	public void testDeleteNonexistingMeasurement() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 						
-			//////////////Received event MeasurementDelete
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-			event.setResult(0.0);
-			event.setExaminationTypeSc(mtExamTypeSc1);
-			event.setRecordDateTime(dt10MinAgo);
-			dbService.deleteMeasurementFromEvent(event);
+		//////////////Received event MeasurementDelete
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
+		event.setResult(0.0);
+		event.setExaminationTypeSc(mtExamTypeSc1);
+		event.setRecordDateTime(dt10MinAgo);
+		dbService.deleteMeasurementFromEvent(event);
 			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Delete of nonexistent measurement")), times(1));
-		}
+		verify(log, times(1)).warn(startsWith("Delete of nonexistent measurement"));
 	}
 	
 	
@@ -1195,49 +1229,55 @@ public class DatabaseServiceTest {
 	 *  
 	 * @throws SQLException
 	 * @throws InterruptedException
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testEarlyDeleteEvent() throws SQLException, InterruptedException {
+	public void testEarlyDeleteEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
 		
-		try (MockedStatic<VandaHUtility> mockedStatic = mockStatic(VandaHUtility.class,Mockito.CALLS_REAL_METHODS)) {
+		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
+		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
+		loggerField.setAccessible(true);
+		loggerField.set(dbService, mock(Logger.class));
+		Logger log = (Logger) loggerField.get(dbService);
 					
-			//////////////Received event MeasurementAdded
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
-			event.setResult(resultA);
-			event.setRecordDateTime(dt10MinAgo);
-			Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+		//////////////Received event MeasurementAdded
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+		event.setResult(resultA);
+		event.setRecordDateTime(dt10MinAgo);
+		Measurement measurement1 = dbService.addMeasurementFromEvent(event);
+		
+		assertNotNull(measurement1);
+		
+		//////////////Received event MeasurementDelete
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
+		event.setResult(0.0);
+		event.setExaminationTypeSc(mtExamTypeSc1);
+		event.setRecordDateTime(dtNow);
+		Thread.sleep(300);
+		dbService.deleteMeasurementFromEvent(event);
+		
+		//////////////Received event MeasurementUpdated
+		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
+		event.setResult(resultB); 
+		event.setRecordDateTime(dt5MinAgo);
+		Thread.sleep(300);
+		Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
+		
+		assertNull(measurement2);
+		
+		Measurement currentMeasurement = dbService.getMeasurement(event.getStationId(), 
+				event.getMeasurementPointNumber(), 
+				event.getExaminationTypeSc(), 
+				event.getMeasurementDateTime());
+		
+		assertNull(currentMeasurement);
 			
-			assertNotNull(measurement1);
-			
-			//////////////Received event MeasurementDelete
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-			event.setResult(0.0);
-			event.setExaminationTypeSc(mtExamTypeSc1);
-			event.setRecordDateTime(dtNow);
-			Thread.sleep(300);
-			dbService.deleteMeasurementFromEvent(event);
-			
-			//////////////Received event MeasurementUpdated
-			event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-			event.setResult(resultB); 
-			event.setRecordDateTime(dt5MinAgo);
-			Thread.sleep(300);
-			Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
-			
-			assertNull(measurement2);
-			
-			Measurement currentMeasurement = dbService.getMeasurement(event.getStationId(), 
-					event.getMeasurementPointNumber(), 
-					event.getExaminationTypeSc(), 
-					event.getMeasurementDateTime());
-			
-			assertNull(currentMeasurement);
-			
-			mockedStatic.verify(() -> VandaHUtility.logAndPrint(any(), eq(Level.WARN), eq(false), 
-					startsWith("Delayed event received and dropped")), times(1));
-		}
+		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
 	
 	private void addStations() {
