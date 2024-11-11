@@ -150,7 +150,11 @@ public class VandaHEventProcessor {
 				msg += "data between " + minRecordTime + " and " + maxRecordTime;
 				lastReportTS = now;
 				
-				if (config.isVerbose()) { System.out.println((new Date()) + ": " + msg); } else {	logger.info(msg); }
+				if (config.isVerbose()) { 
+					System.out.println((new Date()) + ": " + msg); 
+				} else {	
+					logger.info(msg); 
+				}
 			}
 	        
 	        /*acknowledgment.acknowledge();*/
