@@ -58,7 +58,7 @@ Note that the API retrieved data, since they are not events, they do not contain
 
 Activate debug level for logging to get received raw event into the log file. Activate trace level to get both raw events and executed queries into the log file.
 
-The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" in application.properties should also be set to "all" or "processed".
+The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" in application.properties can be set to "all" so that all events are logged or to "processed" so only the processed events are logged.
 
 ## Usage
 
