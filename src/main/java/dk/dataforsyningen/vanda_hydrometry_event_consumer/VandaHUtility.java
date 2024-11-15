@@ -12,13 +12,6 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.event.Level;
-
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
-
 
 /**
  * Utility class
@@ -28,36 +21,18 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
 public class VandaHUtility {
 	
 	public static String BOLD_ON = "\033[1m";
-	public static String ITALIC_ON = "\033[3m";
 	public static String FORMAT_OFF = "\033[0m";
 	
 	
 	/**
-	 * Returns the value for the given key from a json given as string
-	 * @param key
-	 * @return value as string
-	 */
-	public static String valueFromJson(String json, String key) {
-		String message = null;
-		if (json == null || key == null) return null;
-		try { 
-			JSONObject bodyObj = new JSONObject(json);
-			message = bodyObj.has(key) ? "" + bodyObj.get(key) : null;
-		} catch (Exception ex) {}
-		return message;
-	}
-	
-	
-	/**
 	 * Takes a string representing a data with possible deviations from the standard form and converts into the form "yyyy-mm-ddThh:mm:ss.SSS[Z]"
-	 * 
 	 * Input format: yyyy-mm-ddThh:mm:ss.sssZ
 	 * where there may be deviations like:
 	 *   missing T or Z
 	 *   month, day ,hours, minutes and seconds may have 1 or 2 digits or be missing
 	 *   milliseconds may have 1 to 3 digit or missing 
 	 *   
-	 * @param date
+	 * @param dateStr
 	 * @param withoutSeconds if true the output will not contain the seconds
 	 * @return date string yyyy-mm-ddThh:mm:ss.SSS[Z]
 	 */
@@ -130,21 +105,6 @@ public class VandaHUtility {
 	}
 	
 	/**
-	 * Convert a UTC date string into a Date.
-	 * see {@link #parseToUtcOffsetDateTime(String dateStr)}
-	 * 
-	 * @param dateStr UTC date string
-	 * @return Date
-	 */
-	public static Date parseUtcDate(String dateStr) {
-		if (dateStr == null) return null;
-		
-		OffsetDateTime odt = parseToUtcOffsetDateTime(dateStr);
-		
-		return odt != null ? Date.from(odt.toInstant()) : null;
-	}
-	
-	/**
 	 * Converts a Java Date object representing a date to an OffsetDateTime using the UTC time zone
 	 * 
 	 *  @param date
@@ -160,7 +120,7 @@ public class VandaHUtility {
 	 * @param date 
 	 * @return OffsetDateTime in local time zone
 	 */
-	public static OffsetDateTime dateToOfssetDateTimeLocalZone(Date date) {
+	public static OffsetDateTime dateToOffsetDateTimeLocalZone(Date date) {
 		return date != null ? date.toInstant().atOffset(ZoneOffset.UTC).atZoneSameInstant(ZoneId.systemDefault()).toOffsetDateTime() : null;
 	}
 	
@@ -174,7 +134,7 @@ public class VandaHUtility {
 	public static OffsetDateTime toOffsetDate(Timestamp ts, boolean utc) {
 		if (ts == null) return null;
 		return utc ? dateToOfssetDateTimeUtc(new Date(ts.getTime())) 
-				: dateToOfssetDateTimeLocalZone(new Date(ts.getTime()));
+				: dateToOffsetDateTimeLocalZone(new Date(ts.getTime()));
 	}
 	
 	public static OffsetDateTime timestampToOffsetDateTimeUtc(long ts) {

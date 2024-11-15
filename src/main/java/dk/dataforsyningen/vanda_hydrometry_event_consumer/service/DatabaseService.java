@@ -46,7 +46,7 @@ public class DatabaseService {
 	 * 
 	 * @param stationId
 	 * @param measurementPointNumber
-	 * @param measurementTypeId
+	 * @param examinationTypeSc
 	 * @param measurementDatetime
 	 * @return list of measurement history for the given measurement
 	 */
@@ -62,7 +62,7 @@ public class DatabaseService {
 	 * 
 	 * @param stationId
 	 * @param measurementPointNumber
-	 * @param measurementTypeId
+	 * @param examinationTypeSc
 	 * @param measurementDatetime
 	 * @return Measurement
 	 */
@@ -259,7 +259,7 @@ public class DatabaseService {
 	
 	/**
 	 * Read the measurement type from DB
-	 * @param id
+	 * @param examinationTypeSc
 	 * @return
 	 */
 	public MeasurementType getMeasurementType(int examinationTypeSc) {
@@ -267,25 +267,8 @@ public class DatabaseService {
 	}
 	
 	/**
-	 * Adds measurement type into DB if it does not exist
-	 * @param measurementType
-	 */
-	public void addMeasurementType(MeasurementType measurementType) {
-		measurementTypeDao.insertMeasurementType(measurementType);
-	}
-	
-	/**
-	 * Inserts (if it does not exist) or update the measurement types from the given list.
-	 * @param measurementTypes list
-	 */
-	@Transactional
-	public void addMeasurementTypes(List<MeasurementType> measurementTypes) {
-		measurementTypeDao.insertMeasurementTypes(measurementTypes);
-	}
-	
-	/**
 	 * Deletes the measurement type with the given id
-	 * @param measurementTypeId
+	 * @param examinationTypeSc
 	 * @return
 	 */
 	public void deleteMeasurementType(int examinationTypeSc) {
@@ -294,7 +277,7 @@ public class DatabaseService {
 	
 	/**
 	 * Inserts measurement into DB.
-	 * @param measurements list
+	 * @param measurement
 	 */
 	public Measurement addMeasurement(Measurement measurement) {
 		return measurementDao.insertMeasurement(measurement);
@@ -306,20 +289,6 @@ public class DatabaseService {
 	 */
 	public void inactivateMeasurementHistory(Measurement measurement) {
 		measurementDao.inactivateMeasurementHistory(measurement);
-	}
-	
-	/**
-	 * Completely deletes the given measurement (and its history, i.e. all related records) from the DB.
-	 * Used for testing.
-	 * @param stationId
-	 * @param measurementPointNumber
-	 * @param examinationTypeSc
-	 * @param measurementDatetime
-	 */
-	public void deleteMeasurementHard(String stationId, int measurementPointNumber,
-			int examinationTypeSc, OffsetDateTime measurementDatetime
-			) {
-		measurementDao.deleteMeasurementWithHistory(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
 	
 	/**
@@ -343,30 +312,5 @@ public class DatabaseService {
 			int examinationTypeSc, OffsetDateTime measurementDatetime) {
 		return measurementDao.countHistory(stationId, measurementPointNumber, examinationTypeSc, measurementDatetime);
 	}
-	
-	/**
-	 * Counts all measurements from the DB (current and non current)
-	 * @return
-	 */
-	public int countAllMeasurements() {
-		return measurementDao.countAll();
-	}
-	
-	/**
-	 * Counts all measurement types.
-	 * @return
-	 */
-	public int countAllMeasurementTypes() {
-		return measurementTypeDao.count();
-	}
-	
-	/**
-	 * Counts all stations from the DB.
-	 * @return
-	 */
-	public int countAllStations() {
-		return stationDao.count();
-	}
-	
 }
 

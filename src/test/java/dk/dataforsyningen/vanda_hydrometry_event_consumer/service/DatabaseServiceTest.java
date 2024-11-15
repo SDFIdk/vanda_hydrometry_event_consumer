@@ -85,7 +85,7 @@ public class DatabaseServiceTest {
 	private DatabaseService dbService;
 	
 	@Autowired
-	VandaHEventConsumerConfig config;
+	private VandaHEventConsumerConfig config;
 	
 	@BeforeEach
 	public void setup() {
@@ -144,7 +144,7 @@ public class DatabaseServiceTest {
 		event.setExaminationTypeSc(mtExamTypeSc1);
 		event.setMeasurementDateTime(dt1DayAgo);
 				
-		deleteAll(); //clean first if any left overs
+		deleteAll(); //clean first if any leftovers
 		
 		addStations();
 	}
@@ -922,7 +922,7 @@ public class DatabaseServiceTest {
 	
 	/**
 	 * Adding existing measurement again will add the data but generate a WARN
-	 * This is a hypothetical non real case designed to test the code behaviour. 
+	 * This is a hypothetical non-real case designed to test the code behaviour.
 	 * It should not occur in the real case.
 	 * 
 	 * @throws SQLException
@@ -936,7 +936,8 @@ public class DatabaseServiceTest {
 	public void testAddExistingMeasurement() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -949,24 +950,24 @@ public class DatabaseServiceTest {
 		event.setRecordDateTime(dt10MinAgo);
 		Measurement measurement1 = dbService.addMeasurementFromEvent(event);
 		
-		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
-				measurement1.getMeasurementPointNumber(), 
+		int measurementHistory = dbService.countMeasurementHistory(measurement1.getStationId(),
+				measurement1.getMeasurementPointNumber(),
 				measurement1.getExaminationTypeSc(), 
 				measurement1.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);
+		assertEquals(1, measurementHistory);
 		
 		//////////////Received event MeasurementAdded
 		Thread.sleep(300);
 		event.setRecordDateTime(dt5MinAgo); //this is fake to test hypothetical case
 		Measurement measurement2 = dbService.addMeasurementFromEvent(event);
 
-		nrMeas = dbService.countMeasurementHistory(measurement2.getStationId(), 
+		measurementHistory = dbService.countMeasurementHistory(measurement2.getStationId(),
 				measurement2.getMeasurementPointNumber(), 
 				measurement2.getExaminationTypeSc(), 
 				measurement2.getMeasurementDateTime());
 		
-		assertEquals(2, nrMeas);
+		assertEquals(2, measurementHistory);
 		
 		verify(log, times(1)).warn(startsWith("Added existing measurement"));
 		
@@ -975,11 +976,9 @@ public class DatabaseServiceTest {
 	
 	/**
 	 * Test adding event where the examination type is missing from the DB should cast exception
-	 * @param event
-	 * @throws SQLException 
 	 */
 	@Test
-	public void testAddMissingMeasurementType() throws SQLException {
+	public void testAddMissingMeasurementType() {
 				
 		if (!enableTest) return;
 		
@@ -995,7 +994,6 @@ public class DatabaseServiceTest {
 	
 	/**
 	 * Receiving the same event twice should drop (ignore) the latest
-	 * @param event
 	 * @throws SQLException 
 	 * @throws InterruptedException 
 	 * @throws SecurityException 
@@ -1008,6 +1006,7 @@ public class DatabaseServiceTest {
 				
 		if (!enableTest) return;
 
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -1022,12 +1021,12 @@ public class DatabaseServiceTest {
 		
 		assertNotNull(measurement1);
 		
-		int nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+		int measurementHistory = dbService.countMeasurementHistory(event.getStationId(),
 				event.getMeasurementPointNumber(), 
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);
+		assertEquals(1, measurementHistory);
 		
 		//same event again
 		Thread.sleep(300);
@@ -1035,12 +1034,12 @@ public class DatabaseServiceTest {
 		
 		assertNull(measurement2);
 		
-		nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+		measurementHistory = dbService.countMeasurementHistory(event.getStationId(),
 				event.getMeasurementPointNumber(), 
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);
+		assertEquals(1, measurementHistory);
 			
 		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
@@ -1059,7 +1058,8 @@ public class DatabaseServiceTest {
 	public void testDelayedAddEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -1072,12 +1072,12 @@ public class DatabaseServiceTest {
 		event.setRecordDateTime(dt5MinAgo);
 		Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
 		
-		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+		int measurementHistory = dbService.countMeasurementHistory(measurement1.getStationId(),
 				measurement1.getMeasurementPointNumber(), 
 				measurement1.getExaminationTypeSc(), 
 				measurement1.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);
+		assertEquals(1, measurementHistory);
 		
 		//////////////Received event MeasurementAdded
 		event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
@@ -1088,31 +1088,31 @@ public class DatabaseServiceTest {
 		
 		assertNull(measurement2);
 
-		nrMeas = dbService.countMeasurementHistory(event.getStationId(), 
+		measurementHistory = dbService.countMeasurementHistory(event.getStationId(),
 				event.getMeasurementPointNumber(), 
 				event.getExaminationTypeSc(), 
 				event.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);
+		assertEquals(1, measurementHistory);
 			
 		verify(log, times(1)).warn(startsWith("Delayed event received and dropped"));
 	}
 	
 	
 	/**
-	 * Updating a non existent measurement will add the measurement but generate a WARN
+	 * Updating a non-existent measurement will add the measurement but generate a WARN
 	 * @throws SQLException
-	 * @throws InterruptedException 
-	 * @throws SecurityException 
-	 * @throws NoSuchFieldException 
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testUpdateNonExistingEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public void testUpdateNonExistingEvent() throws SQLException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -1125,12 +1125,12 @@ public class DatabaseServiceTest {
 		event.setRecordDateTime(dt5MinAgo);
 		Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
 		
-		int nrMeas = dbService.countMeasurementHistory(measurement1.getStationId(), 
+		int measurementHistory = dbService.countMeasurementHistory(measurement1.getStationId(),
 				measurement1.getMeasurementPointNumber(), 
 				measurement1.getExaminationTypeSc(), 
 				measurement1.getMeasurementDateTime());
 		
-		assertEquals(1, nrMeas);			
+		assertEquals(1, measurementHistory);
 		
 		verify(log, times(1)).warn(startsWith("Update on nonexistent measurement"));
 	}
@@ -1138,11 +1138,9 @@ public class DatabaseServiceTest {
 	
 	/**
 	 * Test update event where the examination type is missing from the DB should cast exception
-	 * @param event
-	 * @throws SQLException 
 	 */
 	@Test
-	public void testUpdateMissingMeasurementType() throws SQLException {
+	public void testUpdateMissingMeasurementType() {
 				
 		if (!enableTest) return;
 		
@@ -1169,7 +1167,8 @@ public class DatabaseServiceTest {
 	public void testDelayedUpdateEvent() throws InterruptedException, SQLException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -1194,19 +1193,18 @@ public class DatabaseServiceTest {
 	}
 	
 	/**
-	 * Delete event on non existing measurement should WARN
-	 * @throws SQLException 
-	 * @throws InterruptedException 
+	 * Delete event on non-existing measurement should WARN
 	 * @throws SecurityException 
 	 * @throws NoSuchFieldException 
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testDeleteNonexistingMeasurement() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public void testDeleteNonExistingMeasurement() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);
@@ -1238,7 +1236,8 @@ public class DatabaseServiceTest {
 	public void testEarlyDeleteEvent() throws SQLException, InterruptedException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		
 		if (!enableTest) return;
-		
+
+		// Get the real class and not the Spring proxy so we can access the private logger
 		Class<?> databaseServiceClass = AopProxyUtils.ultimateTargetClass(dbService);
 		Field loggerField = databaseServiceClass.getDeclaredField("logger"); 
 		loggerField.setAccessible(true);

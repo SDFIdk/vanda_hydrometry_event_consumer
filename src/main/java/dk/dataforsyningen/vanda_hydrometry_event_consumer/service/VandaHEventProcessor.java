@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.listener.MessageListenerContainer;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
@@ -33,14 +32,13 @@ public class VandaHEventProcessor {
 	
 	private HashMap<Integer, Long> minOffset = new HashMap<>();
 	private HashMap<Integer, Long> maxOffset = new HashMap<>();
-	
-	private long lastReportTS = 0L;
+
+	private long lastReportTimestamp = 0L;
 	private long eventCounter = 0l;
 	private long eventCounterAdd = 0l;
 	private long eventCounterUpd = 0l;
 	private long eventCounterDel = 0l;
 	private long eventCounterTotal = 0l;
-	private long counterReportTimer = 0l;
 	private OffsetDateTime minRecordTime = null;
 	private OffsetDateTime maxRecordTime = null;
 	
@@ -111,6 +109,7 @@ public class VandaHEventProcessor {
 				}
 			}
 
+			// Can be used to debugging and matching events from the logfile, offset is the page from event hub
 			//calculate offset min/max
 			if (!minOffset.containsKey(event.getPartition()) || event.getOffset() < minOffset.get(event.getPartition())) {
 				minOffset.put(event.getPartition(), event.getOffset());
@@ -118,8 +117,8 @@ public class VandaHEventProcessor {
 			if (!maxOffset.containsKey(event.getPartition()) || event.getOffset() > maxOffset.get(event.getPartition())) {
 				maxOffset.put(event.getPartition(), event.getOffset());
 			}
-			
-			//calc min/max record time
+
+			//calc min/max event record time. Is when the measurement event was created
 			if (minRecordTime == null || event.getRecordDateTime().isBefore(minRecordTime)) {
 				minRecordTime = event.getRecordDateTime();
 			}
@@ -128,33 +127,35 @@ public class VandaHEventProcessor {
 			}
 			
 			//show report
+			// event counter of received events within this report time frame
 			eventCounter++;
+			// event counter of all received events since the application was started
 			eventCounterTotal++;
 			long now = System.currentTimeMillis();
-			if (config.getReportPeriodSec() > 0 && now >  counterReportTimer + config.getReportPeriodSec() * 1000) {
-				counterReportTimer = now; 
-				String msg = 
-						"Received " + eventCounter + "/" + eventCounterTotal + 
-						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel + 
-						") " + 
-						(lastReportTS > 0 ? ("within " + (int)((now - lastReportTS)/1000) + " sec") : "") + 
+			if (config.getReportPeriodSec() > 0 && now > lastReportTimestamp + config.getReportPeriodSec() * 1000) {
+
+				String msg =
+						"Received " + eventCounter + "/" + eventCounterTotal +
+						" events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," + eventCounterDel +
+						") " +
+						(lastReportTimestamp > 0 ? ("within " + (int)((now - lastReportTimestamp)/1000) + " sec") : "") +
 						"\n";
+				// reset the event counter within this report period
 				eventCounter = 0;
 				
 				//display offset min/max
-				for(int p : minOffset.keySet()) {
-					long mO = minOffset.get(p);
-					long MO = maxOffset.containsKey(p) ? maxOffset.get(p) : 0;
-					msg += "min/max for part " + p + ": " + mO + "/" + MO + "; ";
+				for(int partition : minOffset.keySet()) {
+					// find the oldest offset for this partition
+					long minimumOffset = minOffset.get(partition);
+					// find the newest offset for this partition
+					long maximumOffset = maxOffset.get(partition);
+					msg += "min/max for part " + partition + ": " + minimumOffset + "/" + maximumOffset + "; ";
 				}
-				msg += "data between " + minRecordTime + " and " + maxRecordTime;
-				lastReportTS = now;
-				
-				if (config.isVerbose()) { 
-					System.out.println((new Date()) + ": " + msg); 
-				} else {	
-					logger.info(msg); 
-				}
+				msg += "event creation timestamp between " + minRecordTime + " and " + maxRecordTime;
+				// remember the time when the report is shown
+				lastReportTimestamp = now;
+
+				logger.info(msg);
 			}
 	        
 	        /*acknowledgment.acknowledge();*/
@@ -164,7 +165,7 @@ public class VandaHEventProcessor {
     }
 	
 	private boolean acceptEvent(EventModel event) {
-		List<Integer> allowedExaminations = config.getExaminationTypeSc(); 
+		List<Integer> allowedExaminations = config.getExaminationTypeSc();
 		boolean acceptExamination = (allowedExaminations.size() == 0 ||  
 				allowedExaminations.contains(event.getExaminationTypeSc()));
 		
@@ -183,14 +184,4 @@ public class VandaHEventProcessor {
             logger.info("Kafka Listener started...");
         }
     }
-
-    // Stop the listener programmatically
-    public void stopListener() {
-        MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("DMPEventHub");
-        if (listenerContainer != null && listenerContainer.isRunning()) {
-            listenerContainer.stop();  // Stop the listener
-            logger.info("Kafka Listener stopped.");
-        }
-    }
-	
 }

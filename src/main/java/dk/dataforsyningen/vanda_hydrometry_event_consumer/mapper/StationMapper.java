@@ -29,7 +29,7 @@ public class StationMapper implements RowMapper<Station> {
 		station.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));
 		station.setUpdated(VandaHUtility.toOffsetDate(rs.getTimestamp("updated"), false));
 		
-		if ((Integer)rs.getObject("examination_type_sc") != null) {
+		if (rs.getObject("examination_type_sc") != null) {
 			MeasurementType mt = new MeasurementType();
 		
 			mt.setParameterSc(rs.getInt("parameter_sc"));

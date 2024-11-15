@@ -52,9 +52,9 @@ public class VandaHEventConsumerConfig {
 	 */
 	public String parseCommands(String... args) {
 		for(String arg : args) {
-			if (arg != null && arg.length() > 0 && !arg.startsWith("--")) {
+			if (arg != null && !arg.isEmpty() && !arg.startsWith("--")) {
 				//do not consider application's startup class as a command.
-				if (!arg.toLowerCase().equals(VandaHEventConsumerApplication.class.getCanonicalName().toLowerCase())) {
+				if (!arg.equalsIgnoreCase(VandaHEventConsumerApplication.class.getCanonicalName())) {
 					command = (arg.toLowerCase());
 					break;
 				}
@@ -112,18 +112,18 @@ public class VandaHEventConsumerConfig {
 	}
 	
 	public boolean isLoggingProcessedEvents() {
-		return loggingEvents != null && loggingEvents.toLowerCase().equals("processed");
+		return loggingEvents != null && loggingEvents.equalsIgnoreCase("processed");
 	}
 	
 	public boolean isLoggingAllEvents() {
-		return loggingEvents != null && loggingEvents.toLowerCase().equals("all");
+		return loggingEvents != null && loggingEvents.equalsIgnoreCase("all");
 	}
 	
 	public List<Integer> getExaminationTypeSc() {
 		ArrayList<Integer> output = new ArrayList<>();
-		if (examinationTypeSc != null && examinationTypeSc.length() > 0) {
-			String[] vals = examinationTypeSc.split(",");
-			for(String s : vals) {
+		if (examinationTypeSc != null && !examinationTypeSc.isEmpty()) {
+			String[] values = examinationTypeSc.split(",");
+			for(String s : values) {
 				try {
 					output.add(Integer.parseInt(s));
 				} catch (NumberFormatException ex) {

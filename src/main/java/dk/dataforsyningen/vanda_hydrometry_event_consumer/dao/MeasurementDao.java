@@ -77,8 +77,8 @@ public interface MeasurementDao {
 				and examination_type_sc = :examinationTypeSc
 				and measurement_point_number = :measurementPointNumber
 				and measurement_date_time = :measurementDateTime
-				and ((vanda_event_timestamp is not null and vanda_event_timestamp >= :eventTimestamp) 
-					or (vanda_event_timestamp is null and created >= :eventTimestamp)) 
+				and ((vanda_event_timestamp is not null and vanda_event_timestamp >= :eventTimestamp)
+					or (vanda_event_timestamp is null and created >= :eventTimestamp))
 			""")
 	boolean isEventDelayed(@Bind OffsetDateTime eventTimestamp,
 			@Bind String stationId,
@@ -100,12 +100,6 @@ public interface MeasurementDao {
 			""")
 	@RegisterRowMapper(MeasurementMapper.class)
 	Measurement insertMeasurement(@BindBean Measurement measurement);
-	
-	@SqlBatch("""
-			insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, result, result_elevation_corrected, is_current, created)
-			values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :result, :resultElevationCorrected, :isCurrent, now())
-			""")
-	void insertMeasurements(@BindBean List<Measurement> measurements);
 
 	
 	/**
@@ -123,43 +117,6 @@ public interface MeasurementDao {
 				and examination_type_sc = :examinationTypeSc
 			""")
 	int inactivateMeasurementHistory(@BindBean Measurement measurement);
-	
-	/**
-	 * Set is_current to false on all records from the given measurements list 
-	 * (all records in the measurements' history)
-	 * 
-	 * @param list of measurements
-	 */
-	@SqlBatch("""
-			update hydrometry.measurement set is_current = false
-			where
-				station_id = :stationId
-				and measurement_date_time = :measurementDateTime
-				and measurement_point_number = :measurementPointNumber
-				and examination_type_sc = :examinationTypeSc
-			""")
-	void inactivateMeasurementsHistory(@BindBean List<Measurement> measurements);
-	
-	/**
-	 * Deletes the matching measurement and all its history
-	 * 
-	 * @param stationId
-	 * @param measurementPointNumber
-	 * @param examinationTypeSc
-	 * @param measurementDateTime
-	 */
-	@SqlUpdate("""
-			delete from hydrometry.measurement
-			where
-				station_id = :stationId
-				and measurement_date_time = :measurementDateTime
-				and measurement_point_number = :measurementPointNumber
-				and examination_type_sc = :examinationTypeSc
-			""")
-	void deleteMeasurementWithHistory(@Bind String stationId, @Bind int measurementPointNumber,
-			@Bind int examinationTypeSc,
-			@Bind OffsetDateTime measurementDateTime
-			);
 	
 	/**
 	 * Deletes all measurements related to the given station
@@ -194,13 +151,4 @@ public interface MeasurementDao {
 	int countHistory(@Bind String stationId, @Bind int measurementPointNumber,
 			@Bind int examinationTypeSc,
 			@Bind OffsetDateTime measurementDateTime);
-	
-	/**
-	 * Counts all measurements from the DB
-	 * 
-	 * @return number of records
-	 */
-	@SqlQuery("select count(*) from hydrometry.measurement")
-	int countAll();
-	
 }

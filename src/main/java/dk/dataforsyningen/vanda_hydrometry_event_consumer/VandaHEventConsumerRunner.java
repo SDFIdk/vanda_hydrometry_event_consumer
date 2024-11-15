@@ -2,7 +2,6 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -22,7 +21,7 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 	VandaHEventProcessor eventProcessor;
 	
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 		logger.info("Application start ...");
 		
 		String command = config.parseCommands(args);
@@ -32,9 +31,6 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 		
 			if ("start".equalsIgnoreCase(command)) {
 				eventProcessor.startListener();
-				
-				//TODO: implement logic to stop if necessary
-				//eventConsumer.stopListener();
 			} else {
 				System.out.println("Vanda Hydrometry Event Consumer\n=====================\nUsage parameters: start [--options[=value]]");
 				System.out.println(VandaHUtility.BOLD_ON + "start" + VandaHUtility.FORMAT_OFF + " commands will start the event hub client that will receive and process events.\n");
