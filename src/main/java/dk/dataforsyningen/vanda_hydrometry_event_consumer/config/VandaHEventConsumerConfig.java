@@ -42,7 +42,7 @@ public class VandaHEventConsumerConfig {
 	private String examinationTypeSc;
 	
 	//enables DAO and database service testing - needs a DB connection
-	@Value("${vanda-hydrometry-data.database.test:#{false}}")
+	@Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.database.test:#{false}}")
 	public boolean enableDbTest; //used only within testing
 	
 	/**
