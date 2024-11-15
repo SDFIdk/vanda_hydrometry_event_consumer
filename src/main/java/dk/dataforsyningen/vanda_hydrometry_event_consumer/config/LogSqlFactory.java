@@ -18,36 +18,36 @@ import org.slf4j.LoggerFactory;
 @SqlStatementCustomizingAnnotation(LogSqlFactory.Factory.class)
 public @interface LogSqlFactory {
 
-    class Factory implements SqlStatementCustomizerFactory {
-    	
-    	private Logger log = null;
-    	
-        @Override
-        public SqlStatementCustomizer createForType(Annotation annotation, Class sqlObjectType) {
-        	
-        	log = LoggerFactory.getLogger(sqlObjectType);
-        	
-            SqlLogger sqlLogger = new SqlLogger() {
-                @Override
-                public void logBeforeExecution(StatementContext context) {
-                    logSql(log, context);
-                }
-                // @Override
-                // public void logAfterExecution(StatementContext context) {
-                // logSql(log, context);
-                // }
-            };
-            return statement -> statement.setSqlLogger(sqlLogger);
-        }
+  class Factory implements SqlStatementCustomizerFactory {
 
-        private static void logSql(Logger log, StatementContext context) {
-            //System.out.println("Raw SQL:\n" + context.getRawSql());
-        	//System.out.println("Parsed SQL:\n" + context.getParsedSql().getSql());
-        	String sql = "" + context.getStatement();
-        	if (context.getStatement() == null) {
-             sql = context.getRawSql();
-        	}
-        	log.trace("Statement SQL:\n" + sql);
-        }
+    private Logger log = null;
+
+    private static void logSql(Logger log, StatementContext context) {
+      //System.out.println("Raw SQL:\n" + context.getRawSql());
+      //System.out.println("Parsed SQL:\n" + context.getParsedSql().getSql());
+      String sql = "" + context.getStatement();
+      if (context.getStatement() == null) {
+        sql = context.getRawSql();
+      }
+      log.trace("Statement SQL:\n" + sql);
     }
+
+    @Override
+    public SqlStatementCustomizer createForType(Annotation annotation, Class sqlObjectType) {
+
+      log = LoggerFactory.getLogger(sqlObjectType);
+
+      SqlLogger sqlLogger = new SqlLogger() {
+        @Override
+        public void logBeforeExecution(StatementContext context) {
+          logSql(log, context);
+        }
+        // @Override
+        // public void logAfterExecution(StatementContext context) {
+        // logSql(log, context);
+        // }
+      };
+      return statement -> statement.setSqlLogger(sqlLogger);
+    }
+  }
 }

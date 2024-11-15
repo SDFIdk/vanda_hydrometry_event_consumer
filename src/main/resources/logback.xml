@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-	<property name="CONSOLE_LOG_THRESHOLD" value="INFO"/>
-	<include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-	<property name="FILE_LOG_THRESHOLD" value="TRACE"/>
-	<property name="LOG_FILE" value="log/vandah-event.log"/>
-	<include resource="org/springframework/boot/logging/logback/file-appender.xml" />
-	
-	<!-- Stop output INFO at start -->
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-	
-	<root level="WARN">
-		<appender-ref ref="FILE"/>
-		<appender-ref ref="CONSOLE"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="CONSOLE_LOG_THRESHOLD" value="INFO"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <property name="FILE_LOG_THRESHOLD" value="TRACE"/>
+    <property name="LOG_FILE" value="log/vandah-event.log"/>
+    <include resource="org/springframework/boot/logging/logback/file-appender.xml"/>
+
+    <!-- Stop output INFO at start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <root level="WARN">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
-    
+
     <logger name="dk.dataforsyningen.vanda_hydrometry_event_consumer" level="DEBUG" additivity="false">
         <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
-        
+
 </configuration>

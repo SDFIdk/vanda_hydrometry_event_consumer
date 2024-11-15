@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class VandaHEventConsumerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(VandaHEventConsumerApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(VandaHEventConsumerApplication.class, args);
+  }
 
 }
