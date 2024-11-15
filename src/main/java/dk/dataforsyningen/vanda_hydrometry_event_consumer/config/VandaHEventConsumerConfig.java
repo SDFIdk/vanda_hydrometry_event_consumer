@@ -13,10 +13,7 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHEventConsumerApp
 public class VandaHEventConsumerConfig {
 
 	private String command;
-	
-	@Value("${verbose:#{null}}")
-	private String verbose;  //boolean
-	
+		
 	@Value("${displaydata:#{null}}")
 	private String displayData;  //boolean
 	
@@ -66,11 +63,7 @@ public class VandaHEventConsumerConfig {
 	public String getCommand() {
 		return command;
 	}
-	
-	public boolean isVerbose() {
-		return verbose != null;
-	}
-	
+		
 	public boolean isDisplayData() {
 		return displayData != null;
 	}
@@ -138,7 +131,6 @@ public class VandaHEventConsumerConfig {
 	public String toString() {
 		return "VandaHEventConsumerConfig [\nexaminationTypeSc=" + examinationTypeSc + 
 				",\ncommand=" + getCommand() +
-				",\nisVerbose=" + isVerbose() + 
 				",\nisDisplayAll=" + isDisplayAll() +
 				",\nisDisplayData=" + isDisplayData() + 
 				",\nisDisplayRawData=" + isDisplayRawData() + 

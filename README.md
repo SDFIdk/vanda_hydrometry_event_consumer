@@ -60,6 +60,9 @@ Activate debug level for logging to get received raw event into the log file. Ac
 
 The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" in application.properties can be set to "all" so that all events are logged or to "processed" so only the processed events are logged.
 
+Running statistics are displayed and logged with level INFO when events are received but with a minimum period define by "dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec" in application.properties. 
+If the time between events is greater the statistic reporting period can be longer.
+
 ## Usage
 
 This section shows the operations and parameters that can be used with the application. In order to run the application from the command line (console) use this command:
@@ -93,16 +96,6 @@ In order to display the raw json data received from the event hub use the follow
 ... however this will only display the raw data of the processed events. In order to display the raw data of all received events use:
 
 	start --displayAll	
-	
-### More output
-
-In order to display running statistics use the parameter "verbose". 
-
-	start --verbose	
-	
-The statistics are displayed when events are received but with a minimum period define by "dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec" in application.properties. 
-If the time between events is greater the statistic reporting period can be longer.
-
 	
 ### Save to DB
 
