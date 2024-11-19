@@ -218,6 +218,8 @@ public class DatabaseServiceTest {
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
     event.setRecordDateTime(dt5MinAgo);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     Thread.sleep(300);
     measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -256,7 +258,9 @@ public class DatabaseServiceTest {
 
     ////////////// Received event MeasurementDeleted
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-    event.setResult(0.0);
+    event.setResult(null);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dtNow);
     Thread.sleep(300);
     dbService.deleteMeasurementFromEvent(event);
@@ -291,7 +295,7 @@ public class DatabaseServiceTest {
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertFalse(newM.getIsCurrent());
-    assertEquals(0.0, newM.getValue());
+    assertNull(newM.getValue());
     assertNull(newM.getValueElevationCorrected());
     assertEquals(dtNow, newM.getVandaEventTimestamp());
 
@@ -395,6 +399,8 @@ public class DatabaseServiceTest {
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
     event.setRecordDateTime(dt5MinAfter);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     Thread.sleep(300);
     measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -491,6 +497,8 @@ public class DatabaseServiceTest {
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
     event.setRecordDateTime(dt5MinAgo);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     Thread.sleep(300);
     measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -652,6 +660,8 @@ public class DatabaseServiceTest {
     ////////////// Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Thread.sleep(300);
     measurement = dbService.updateMeasurementFromEvent(event);
@@ -691,6 +701,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Measurement measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -719,6 +731,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultC);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dtNow);
     measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -758,6 +772,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementAdded
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
     event.setResult(resultA);
+    event.setUnitSc(mtUnitSc1);
+    event.setParameterSc(mtParamSc1);
     event.setRecordDateTime(dt10MinAgo);
     Thread.sleep(300);
     measurement = dbService.addMeasurementFromEvent(event);
@@ -846,6 +862,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Thread.sleep(300);
     measurement = dbService.updateMeasurementFromEvent(event);
@@ -887,6 +905,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultA);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dtNow);
     measurement = dbService.updateMeasurementFromEvent(event);
 
@@ -1100,6 +1120,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
 
@@ -1158,6 +1180,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB); //same as the one from API
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Measurement measurement1 = dbService.updateMeasurementFromEvent(event);
 
@@ -1185,6 +1209,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementAdded
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultA);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setExaminationTypeSc(mtExamTypeSc0);
     event.setRecordDateTime(dt10MinAgo);
 
@@ -1227,6 +1253,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultA); //same as the one from API
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Thread.sleep(300);
     Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
@@ -1262,7 +1290,9 @@ public class DatabaseServiceTest {
 
     //////////////Received event MeasurementDelete
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-    event.setResult(0.0);
+    event.setResult(null);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setExaminationTypeSc(mtExamTypeSc1);
     event.setRecordDateTime(dt10MinAgo);
     dbService.deleteMeasurementFromEvent(event);
@@ -1307,7 +1337,9 @@ public class DatabaseServiceTest {
 
     //////////////Received event MeasurementDelete
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-    event.setResult(0.0);
+    event.setResult(null);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setExaminationTypeSc(mtExamTypeSc1);
     event.setRecordDateTime(dtNow);
     Thread.sleep(300);
@@ -1316,6 +1348,8 @@ public class DatabaseServiceTest {
     //////////////Received event MeasurementUpdated
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
     event.setResult(resultB);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setRecordDateTime(dt5MinAgo);
     Thread.sleep(300);
     Measurement measurement2 = dbService.updateMeasurementFromEvent(event);
