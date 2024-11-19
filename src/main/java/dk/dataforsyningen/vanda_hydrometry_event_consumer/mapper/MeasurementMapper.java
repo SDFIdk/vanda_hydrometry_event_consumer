@@ -16,8 +16,8 @@ public class MeasurementMapper implements RowMapper<Measurement> {
     Measurement m = new Measurement();
 
     m.setStationId(rs.getString("station_id"));
-    m.setResult((Double) rs.getObject("result"));
-    m.setResultElevationCorrected((Double) rs.getObject("result_elevation_corrected"));
+    m.setValue((Double) rs.getObject("value"));
+    m.setValueElevationCorrected((Double) rs.getObject("value_elevation_corrected"));
     m.setIsCurrent(rs.getBoolean("is_current"));
     m.setMeasurementDateTime(
         VandaHUtility.toOffsetDate(rs.getTimestamp("measurement_date_time"), true));

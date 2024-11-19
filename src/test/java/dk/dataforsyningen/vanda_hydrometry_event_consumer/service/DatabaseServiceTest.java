@@ -207,8 +207,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultA, currentMeasurement.getResult());
-    assertNull(currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultA, currentMeasurement.getValue());
+    assertNull(currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
 
@@ -237,14 +237,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultA, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultA, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultB, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultB, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
 
     assertEquals(newM.getStationId(), oldM.getStationId());
@@ -280,19 +280,19 @@ public class DatabaseServiceTest {
 
     assertFalse(olderM.getIsCurrent());
     assertEquals(stationId, olderM.getStationId());
-    assertEquals(resultA, olderM.getResult());
-    assertNull(olderM.getResultElevationCorrected());
+    assertEquals(resultA, olderM.getValue());
+    assertNull(olderM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
 
     assertFalse(oldM.getIsCurrent());
-    assertEquals(resultB, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultB, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertFalse(newM.getIsCurrent());
-    assertEquals(0.0, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(0.0, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dtNow, newM.getVandaEventTimestamp());
 
     assertEquals(olderM.getStationId(), oldM.getStationId());
@@ -343,8 +343,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultA, currentMeasurement.getResult());
-    assertNull(currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultA, currentMeasurement.getValue());
+    assertNull(currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
 
@@ -352,8 +352,8 @@ public class DatabaseServiceTest {
 
     //////////////add measurement as if it would be read from API
     Thread.sleep(300);
-    m1.setResult(resultA);
-    m1.setResultElevationCorrected(resultECA);
+    m1.setValue(resultA);
+    m1.setValueElevationCorrected(resultECA);
     Measurement insertedMeasurement = addMeasurement(m1);
 
     currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(),
@@ -374,14 +374,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultA, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultA, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultA, newM.getResult());
-    assertEquals(resultECA, newM.getResultElevationCorrected());
+    assertEquals(resultA, newM.getValue());
+    assertEquals(resultECA, newM.getValueElevationCorrected());
     assertNull(newM.getVandaEventTimestamp());
 
     assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
@@ -415,19 +415,19 @@ public class DatabaseServiceTest {
 
     assertFalse(olderM.getIsCurrent());
     assertEquals(stationId, olderM.getStationId());
-    assertEquals(resultA, olderM.getResult());
-    assertNull(olderM.getResultElevationCorrected());
+    assertEquals(resultA, olderM.getValue());
+    assertNull(olderM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
 
     assertFalse(oldM.getIsCurrent());
-    assertEquals(resultECA, oldM.getResultElevationCorrected());
-    assertEquals(resultA, oldM.getResult());
+    assertEquals(resultECA, oldM.getValueElevationCorrected());
+    assertEquals(resultA, oldM.getValue());
     assertNull(oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultB, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultB, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dt5MinAfter, newM.getVandaEventTimestamp());
 
     assertEquals(olderM.getStationId(), oldM.getStationId());
@@ -480,8 +480,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultA, currentMeasurement.getResult());
-    assertNull(currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultA, currentMeasurement.getValue());
+    assertNull(currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
 
@@ -510,14 +510,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultA, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultA, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultB, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultB, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
 
     assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
@@ -529,8 +529,8 @@ public class DatabaseServiceTest {
 
     //////////////add measurement as if it would be read from API
     Thread.sleep(300);
-    m1.setResult(resultB);
-    m1.setResultElevationCorrected(resultECB);
+    m1.setValue(resultB);
+    m1.setValueElevationCorrected(resultECB);
     Measurement insertedMeasurement = addMeasurement(m1);
 
     currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(),
@@ -552,19 +552,19 @@ public class DatabaseServiceTest {
 
     assertFalse(olderM.getIsCurrent());
     assertEquals(stationId, olderM.getStationId());
-    assertEquals(resultA, olderM.getResult());
-    assertNull(olderM.getResultElevationCorrected());
+    assertEquals(resultA, olderM.getValue());
+    assertNull(olderM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
 
     assertFalse(oldM.getIsCurrent());
-    assertNull(oldM.getResultElevationCorrected());
-    assertEquals(resultB, oldM.getResult());
+    assertNull(oldM.getValueElevationCorrected());
+    assertEquals(resultB, oldM.getValue());
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultB, newM.getResult());
-    assertEquals(resultECB, newM.getResultElevationCorrected());
+    assertEquals(resultB, newM.getValue());
+    assertEquals(resultECB, newM.getValueElevationCorrected());
     assertNull(newM.getVandaEventTimestamp());
 
     assertEquals(olderM.getStationId(), oldM.getStationId());
@@ -595,8 +595,8 @@ public class DatabaseServiceTest {
     }
 
     //////////////add measurement as if it would be read from API
-    m1.setResult(resultB);
-    m1.setResultElevationCorrected(resultECB);
+    m1.setValue(resultB);
+    m1.setValueElevationCorrected(resultECB);
     Measurement insertedMeasurement = addMeasurement(m1);
 
     Measurement currentMeasurement = dbService.getMeasurement(insertedMeasurement.getStationId(),
@@ -616,8 +616,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultB, currentMeasurement.getResult());
-    assertEquals(resultECB, currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultB, currentMeasurement.getValue());
+    assertEquals(resultECB, currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertNull(currentMeasurement.getVandaEventTimestamp());
 
@@ -709,8 +709,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultB, currentMeasurement.getResult());
-    assertNull(currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultB, currentMeasurement.getValue());
+    assertNull(currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertEquals(dt5MinAgo, currentMeasurement.getVandaEventTimestamp());
 
@@ -738,14 +738,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultB, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultB, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultC, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultC, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dtNow, newM.getVandaEventTimestamp());
 
     assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
@@ -780,14 +780,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultB, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultB, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultC, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultC, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dtNow, newM.getVandaEventTimestamp());
 
     assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
@@ -836,8 +836,8 @@ public class DatabaseServiceTest {
     assertEquals(currentMeasurement, history.getFirst());
     assertTrue(currentMeasurement.getIsCurrent());
     assertEquals(stationId, currentMeasurement.getStationId());
-    assertEquals(resultA, currentMeasurement.getResult());
-    assertNull(currentMeasurement.getResultElevationCorrected());
+    assertEquals(resultA, currentMeasurement.getValue());
+    assertNull(currentMeasurement.getValueElevationCorrected());
     assertEquals(dt1DayAgo, currentMeasurement.getMeasurementDateTime());
     assertEquals(dt10MinAgo, currentMeasurement.getVandaEventTimestamp());
 
@@ -866,14 +866,14 @@ public class DatabaseServiceTest {
 
     assertFalse(oldM.getIsCurrent());
     assertEquals(stationId, oldM.getStationId());
-    assertEquals(resultA, oldM.getResult());
-    assertNull(oldM.getResultElevationCorrected());
+    assertEquals(resultA, oldM.getValue());
+    assertNull(oldM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, oldM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultB, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultB, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dt5MinAgo, newM.getVandaEventTimestamp());
 
     assertTrue(oldM.getCreated().isBefore(newM.getCreated()));
@@ -908,19 +908,19 @@ public class DatabaseServiceTest {
 
     assertFalse(olderM.getIsCurrent());
     assertEquals(stationId, olderM.getStationId());
-    assertEquals(resultA, olderM.getResult());
-    assertNull(olderM.getResultElevationCorrected());
+    assertEquals(resultA, olderM.getValue());
+    assertNull(olderM.getValueElevationCorrected());
     assertEquals(dt1DayAgo, olderM.getMeasurementDateTime());
     assertEquals(dt10MinAgo, olderM.getVandaEventTimestamp());
 
     assertFalse(oldM.getIsCurrent());
-    assertNull(oldM.getResultElevationCorrected());
-    assertEquals(resultB, oldM.getResult());
+    assertNull(oldM.getValueElevationCorrected());
+    assertEquals(resultB, oldM.getValue());
     assertEquals(dt5MinAgo, oldM.getVandaEventTimestamp());
 
     assertTrue(newM.getIsCurrent());
-    assertEquals(resultA, newM.getResult());
-    assertNull(newM.getResultElevationCorrected());
+    assertEquals(resultA, newM.getValue());
+    assertNull(newM.getValueElevationCorrected());
     assertEquals(dtNow, newM.getVandaEventTimestamp());
 
     assertEquals(olderM.getStationId(), oldM.getStationId());
@@ -1220,8 +1220,8 @@ public class DatabaseServiceTest {
     Logger log = (Logger) loggerField.get(dbService);
 
     //////////////add measurement as if it would be read from API
-    m1.setResult(resultA);
-    m1.setResultElevationCorrected(resultECA);
+    m1.setValue(resultA);
+    m1.setValueElevationCorrected(resultECA);
     addMeasurement(m1);
 
     //////////////Received event MeasurementUpdated

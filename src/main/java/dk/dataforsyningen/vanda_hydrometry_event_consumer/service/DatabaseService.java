@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DatabaseService {
 
-  private static final Logger logger = LoggerFactory.getLogger(DatabaseService.class);
+  private static Logger logger = LoggerFactory.getLogger(DatabaseService.class);
 
   private final StationDao stationDao;
   private final MeasurementDao measurementDao;
