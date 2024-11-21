@@ -32,6 +32,7 @@ public class VandaHEventProcessorTest {
   private final int mtExamTypeSc = 25;
   private final int mtUnitSc = 19;
   private final int reasonCodeSc = 5;
+  private final String loggerId = "logger";
   private final String dateTime = "2024-10-04T23:50:00.00Z";
   private final String recordDateTime = "1969-12-31T23:59:59.999Z";
   private final List<Integer> examinationTypes = List.of(25, 27);
@@ -101,6 +102,7 @@ public class VandaHEventProcessorTest {
     processor.consume(recordAdd);
 
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+    event.setLoggerId(loggerId);
     event.setResult(result1);
 
     verify(dbService).addMeasurementFromEvent(event);

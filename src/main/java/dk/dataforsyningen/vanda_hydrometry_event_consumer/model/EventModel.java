@@ -3,20 +3,40 @@ package dk.dataforsyningen.vanda_hydrometry_event_consumer.model;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import org.json.JSONObject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EventModel {
+	
+  private final static Logger logger = LoggerFactory.getLogger(EventModel.class);
 
+  @JsonProperty(value = "EventType")
   private String eventType;
+  @JsonProperty(value = "StationId")
   private String stationId;
+  @JsonProperty(value = "OperatorStationId")
   private String operatorStationId;
+  @JsonProperty(value = "MeasurementPointNumber")
   private Integer measurementPointNumber;
+  @JsonProperty(value = "UnitSc")
   private Integer unitSc;
+  @JsonProperty(value = "ParameterSc")
   private Integer parameterSc;
+  @JsonProperty(value = "ExaminationTypeSc")
   private Integer examinationTypeSc;
+  @JsonProperty(value = "ReasonCodeSc")
   private Integer reasonCodeSc;
+  @JsonProperty(value = "Result")
   private Double result;
+  @JsonProperty(value = "MeasurementDateTime")
   private OffsetDateTime measurementDateTime;
+  @JsonProperty(value = "LoggerId")
+  private String loggerId;
   private OffsetDateTime recordDateTime;
   private long offset;
   private int partition;
@@ -35,38 +55,27 @@ public class EventModel {
     this.reasonCodeSc = obj.getReasonCodeSc();
     this.result = obj.getResult();
     this.measurementDateTime = obj.getMeasurementDateTime();
+    this.loggerId = obj.getLoggerId();
     this.recordDateTime = obj.getRecordDateTime();
     this.offset = obj.getOffset();
     this.partition = obj.getPartition();
   }
 
 
-  public static EventModel fromJson(String json) {
-    EventModel event = new EventModel();
-		if (json == null || json.length() == 0) {
-			return null;
+  public static EventModel fromJson(String json) throws JsonProcessingException {
+    EventModel event = null;
+	
+    if (json != null && json.length() > 0) {
+		try {
+			event = new ObjectMapper().readValue(json, EventModel.class);
+			event.setRecordDateTime(null);
+		    event.setOffset(0L);
+		    event.setPartition(0);
+		} catch (JsonProcessingException e) {
+			logger.error("Error parsing json event: " + e.getMessage());
+			throw e;
 		}
-    JSONObject bodyObj = new JSONObject(json);
-    event.setEventType(bodyObj.has("EventType") ? "" + bodyObj.get("EventType") : null);
-    event.setStationId(bodyObj.has("StationId") ? "" + bodyObj.get("StationId") : null);
-    event.setOperatorStationId(
-        bodyObj.has("OperatorStationId") ? "" + bodyObj.get("OperatorStationId") : null);
-    event.setMeasurementPointNumber(bodyObj.has("MeasurementPointNumber") ? 
-    		VandaHUtility.toInt("" + bodyObj.get("MeasurementPointNumber")) : null);
-    event.setUnitSc(bodyObj.has("UnitSc") ? VandaHUtility.toInt("" + bodyObj.get("UnitSc")) : null);
-    event.setParameterSc(bodyObj.has("ParameterSc") ?
-        VandaHUtility.toInt("" + bodyObj.get("ParameterSc")) : null);
-    event.setExaminationTypeSc(bodyObj.has("ExaminationTypeSc") ? 
-    		VandaHUtility.toInt("" + bodyObj.get("ExaminationTypeSc")) : null);
-    event.setReasonCodeSc(bodyObj.has("ReasonCodeSc") ?
-        VandaHUtility.toInt("" + bodyObj.get("ReasonCodeSc")) : null);
-    event.setResult(bodyObj.has("Result") ?
-        VandaHUtility.toDouble("" + bodyObj.get("Result")) : null);
-    event.setMeasurementDateTime(bodyObj.has("MeasurementDateTime") ? 
-    		VandaHUtility.parseToUtcOffsetDateTime("" + bodyObj.get("MeasurementDateTime")) : null);
-    event.setRecordDateTime(null);
-    event.setOffset(0L);
-    event.setPartition(0);
+    }    
 
     return event;
   }
@@ -150,6 +159,18 @@ public class EventModel {
   public void setMeasurementDateTime(OffsetDateTime measurementDateTime) {
     this.measurementDateTime = measurementDateTime;
   }
+  
+  public void setMeasurementDateTime(String measurementDateTime) {
+	    this.measurementDateTime = VandaHUtility.parseToUtcOffsetDateTime(measurementDateTime);
+  }
+  
+  public String getLoggerId() {
+	return loggerId;
+  }
+
+  public void setLoggerId(String loggerId) {
+	this.loggerId = loggerId;
+  }
 
   public OffsetDateTime getRecordDateTime() {
     return recordDateTime;
@@ -199,7 +220,8 @@ public class EventModel {
         && Objects.equals(reasonCodeSc, other.reasonCodeSc)
         && Objects.equals(recordDateTime, other.recordDateTime)
         && Double.doubleToLongBits(result) == Double.doubleToLongBits(other.result)
-        && Objects.equals(stationId, other.stationId) 
+        && Objects.equals(stationId, other.stationId)
+        && Objects.equals(loggerId, other.loggerId) 
         && Objects.equals(unitSc, other.unitSc);
   }
 
@@ -230,6 +252,7 @@ public class EventModel {
         + ", parameterSc=" + parameterSc + ", examinationTypeSc=" + examinationTypeSc +
         ", reasonCodeSc="
         + reasonCodeSc + ", result=" + result + ", measurementDateTime=" + measurementDateTime
+        + ", loggerId=" + loggerId
         + ", recordDateTime=" + recordDateTime + ", offset=" + offset + ", partition=" + partition
         + "]";
   }
