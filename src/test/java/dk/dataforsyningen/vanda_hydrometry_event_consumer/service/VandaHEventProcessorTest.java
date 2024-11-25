@@ -81,7 +81,7 @@ public class VandaHEventProcessorTest {
     event.setUnitSc(mtUnitSc);
     event.setParameterSc(mtParamSc);
     event.setExaminationTypeSc(mtExamTypeSc);
-    event.setMeasurementDateTime(VandaHUtility.parseForAPI(dateTime));
+    event.setMeasurementDateTime(dateTime);
     event.setReasonCodeSc(reasonCodeSc);
     event.setPartition(1);
     event.setRecordDateTime(VandaHUtility.parseToUtcOffsetDateTime(recordDateTime));

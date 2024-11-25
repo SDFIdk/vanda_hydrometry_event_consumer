@@ -3,6 +3,7 @@ package dk.dataforsyningen.vanda_hydrometry_evet_consumer.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,7 +33,7 @@ public class EventModelTest {
 	
 	@Test
 	public void testMeasurementAddedDecoding() throws JsonProcessingException {
-		EventModel event = EventModel.fromJson(measurementAdded);
+		EventModel event = new ObjectMapper().readValue(measurementAdded, EventModel.class);
 		
 		assertEquals("MeasurementAdded", event.getEventType());
 		assertEquals(stationId, event.getStationId());
@@ -52,7 +53,7 @@ public class EventModelTest {
 	
 	@Test
 	public void testMeasurementUpdatedDecoding() throws JsonProcessingException {
-		EventModel event = EventModel.fromJson(measurementUpdated);
+		EventModel event = new ObjectMapper().readValue(measurementUpdated, EventModel.class);
 		
 		assertEquals("MeasurementUpdated", event.getEventType());
 		assertEquals(stationId, event.getStationId());
@@ -72,7 +73,7 @@ public class EventModelTest {
 	
 	@Test
 	public void testMeasurementDeletedDecoding() throws JsonProcessingException {
-		EventModel event = EventModel.fromJson(measurementDeleted);
+		EventModel event = new ObjectMapper().readValue(measurementDeleted, EventModel.class);
 		
 		assertEquals("MeasurementDeleted", event.getEventType());
 		assertEquals(stationId, event.getStationId());
