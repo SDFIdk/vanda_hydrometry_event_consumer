@@ -1,12 +1,11 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
-
 
 public class MeasurementMapper implements RowMapper<Measurement> {
 
@@ -19,11 +18,10 @@ public class MeasurementMapper implements RowMapper<Measurement> {
     m.setValue((Double) rs.getObject("value"));
     m.setValueElevationCorrected((Double) rs.getObject("value_elevation_corrected"));
     m.setIsCurrent(rs.getBoolean("is_current"));
-    m.setMeasurementDateTime(
-        VandaHUtility.toOffsetDate(rs.getTimestamp("measurement_date_time"), true));
-    m.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));
-    m.setVandaEventTimestamp(
-        VandaHUtility.toOffsetDate(rs.getTimestamp("vanda_event_timestamp"), true));
+    m.setMeasurementDateTime((OffsetDateTime) rs.getObject("measurement_date_time"));
+
+    m.setCreated((OffsetDateTime) rs.getObject("created"));
+    m.setVandaEventTimestamp((OffsetDateTime) rs.getObject("vanda_event_timestamp"));
     m.setExaminationTypeSc((Integer) rs.getObject("examination_type_sc"));
     m.setMeasurementPointNumber(rs.getInt("measurement_point_number"));
 

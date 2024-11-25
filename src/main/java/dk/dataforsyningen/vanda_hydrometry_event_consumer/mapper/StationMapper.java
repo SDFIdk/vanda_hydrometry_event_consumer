@@ -1,13 +1,12 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
-
 
 public class StationMapper implements RowMapper<Station> {
 
@@ -24,8 +23,8 @@ public class StationMapper implements RowMapper<Station> {
     station.setLocationSrid((Integer) rs.getObject("location_srid"));
     station.setLocationType(rs.getString("location_type"));
     station.setDescription(rs.getString("description"));
-    station.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));
-    station.setUpdated(VandaHUtility.toOffsetDate(rs.getTimestamp("updated"), false));
+    station.setCreated((OffsetDateTime) rs.getObject("created"));
+    station.setUpdated((OffsetDateTime) rs.getObject("updated"));
 
     if (rs.getObject("examination_type_sc") != null) {
       MeasurementType mt = new MeasurementType();

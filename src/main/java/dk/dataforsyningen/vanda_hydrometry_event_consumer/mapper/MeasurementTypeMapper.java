@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
-
 public class MeasurementTypeMapper implements RowMapper<MeasurementType> {
 
   @Override

@@ -1,6 +1,5 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.model;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -131,7 +130,7 @@ public class EventModel {
   }
 
   public void setMeasurementDateTime(String measurementDateTime) {
-    this.measurementDateTime = VandaHUtility.parseToUtcOffsetDateTime(measurementDateTime);
+    this.measurementDateTime = OffsetDateTime.parse(measurementDateTime);
   }
   
   public String getLoggerId() {

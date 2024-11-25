@@ -13,6 +13,9 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
 
   private final Logger logger = LoggerFactory.getLogger(VandaHEventConsumerRunner.class);
 
+  public static String BOLD_ON = "\033[1m";
+  public static String FORMAT_OFF = "\033[0m";
+
   @Autowired
   VandaHEventConsumerConfig config;
 
@@ -33,7 +36,7 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
       } else {
         System.out.println(
             "Vanda Hydrometry Event Consumer\n=====================\nUsage parameters: start [--options[=value]]");
-        System.out.println(VandaHUtility.BOLD_ON + "start" + VandaHUtility.FORMAT_OFF +
+        System.out.println(BOLD_ON + "start" + FORMAT_OFF +
             " commands will start the event hub client that will receive and process events.\n");
 
         System.out.println(

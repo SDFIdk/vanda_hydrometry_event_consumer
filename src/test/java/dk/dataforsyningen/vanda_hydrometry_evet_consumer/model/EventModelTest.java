@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
 
 public class EventModelTest {
@@ -22,7 +22,7 @@ public class EventModelTest {
 	private final int mtUnitSc = 19;
 	private final int reasonCodeSc = 5;
 	private final String loggerId = "logger";
-	private final String dateTime = "2024-10-04T23:50:00.00Z";
+	private final OffsetDateTime dateTime = OffsetDateTime.parse("2024-10-04T23:50:00.00Z");
 	private final String measurementAdded =
 		      "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"12345678\",\"OperatorStationId\":\"WATSONC-773\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1233,\"UnitSc\":19,\"Result\":1376.9,\"ReasonCodeSc\":5}";
 	private final String measurementUpdated =
@@ -44,7 +44,7 @@ public class EventModelTest {
 		assertEquals(mtExamTypeSc, event.getExaminationTypeSc());
 		assertEquals(reasonCodeSc, event.getReasonCodeSc());
 		assertEquals(result1, event.getResult());
-		assertEquals(VandaHUtility.parseForAPI(dateTime), event.getMeasurementDateTime());
+		assertEquals(dateTime, event.getMeasurementDateTime());
 		assertEquals(loggerId, event.getLoggerId());
 		assertNull(event.getRecordDateTime());
 		assertEquals(0, event.getOffset());
@@ -64,7 +64,7 @@ public class EventModelTest {
 		assertEquals(mtExamTypeSc, event.getExaminationTypeSc());
 		assertEquals(reasonCodeSc, event.getReasonCodeSc());
 		assertEquals(result1, event.getResult());
-		assertEquals(VandaHUtility.parseForAPI(dateTime), event.getMeasurementDateTime());
+		assertEquals(dateTime, event.getMeasurementDateTime());
 		assertNull(event.getLoggerId());
 		assertNull(event.getRecordDateTime());
 		assertEquals(0, event.getOffset());
@@ -84,7 +84,7 @@ public class EventModelTest {
 		assertEquals(mtExamTypeSc, event.getExaminationTypeSc());
 		assertNull(event.getReasonCodeSc());
 		assertNull(event.getResult());
-		assertEquals(VandaHUtility.parseForAPI(dateTime), event.getMeasurementDateTime());
+		assertEquals(dateTime, event.getMeasurementDateTime());
 		assertNull(event.getLoggerId());
 		assertNull(event.getRecordDateTime());
 		assertEquals(0, event.getOffset());

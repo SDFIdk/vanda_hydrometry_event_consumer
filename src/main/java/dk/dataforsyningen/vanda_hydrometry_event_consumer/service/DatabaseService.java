@@ -1,6 +1,5 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.MeasurementTypeDao;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.dao.StationDao;
