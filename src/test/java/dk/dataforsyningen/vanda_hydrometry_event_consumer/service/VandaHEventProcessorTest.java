@@ -32,6 +32,7 @@ public class VandaHEventProcessorTest {
   private final int mtExamTypeSc = 25;
   private final int mtUnitSc = 19;
   private final int reasonCodeSc = 5;
+  private final String loggerId = "logger";
   private final String dateTime = "2024-10-04T23:50:00.00Z";
   private final String recordDateTime = "1969-12-31T23:59:59.999Z";
   private final List<Integer> examinationTypes = List.of(25, 27);
@@ -48,7 +49,7 @@ public class VandaHEventProcessorTest {
   private final String measurementDeleted =
       "{\"EventType\":\"MeasurementDeleted\",\"StationId\":\"12345678\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":25,\"MeasurementDateTime\":\"2024-10-04T23:50:00.00Z\"}";
   private final String irrelevantMeasurement =
-      "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"70000278\",\"OperatorStationId\":\"WATSONC-1518\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":29,\"MeasurementDateTime\":\"2024-10-05T00:00:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1154,\"UnitSc\":29,\"Result\":11.1}";
+      "{\"EventType\":\"MeasurementAdded\",\"StationId\":\"70000278\",\"OperatorStationId\":\"WATSONC-1518\",\"MeasurementPointNumber\":1,\"ExaminationTypeSc\":29,\"MeasurementDateTime\":\"2024-10-05T00:00:00.00Z\",\"LoggerId\":\"logger\",\"ParameterSc\":1154,\"UnitSc\":29,\"Result\":11.1,\"ReasonCodeSc\":5}";
   @MockBean
   private DatabaseService dbService;
 
@@ -101,6 +102,7 @@ public class VandaHEventProcessorTest {
     processor.consume(recordAdd);
 
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_ADDED);
+    event.setLoggerId(loggerId);
     event.setResult(result1);
 
     verify(dbService).addMeasurementFromEvent(event);
@@ -112,8 +114,8 @@ public class VandaHEventProcessorTest {
     processor.consume(recordUpdate);
 
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_UPDATED);
-    event.setUnitSc(0);
-    event.setParameterSc(0);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
     event.setResult(result2);
 
     verify(dbService).updateMeasurementFromEvent(event);
@@ -125,9 +127,9 @@ public class VandaHEventProcessorTest {
     processor.consume(recordDelete);
 
     event.setEventType(VandaHEventProcessor.EVENT_MEASUREMENT_DELETED);
-    event.setUnitSc(0);
-    event.setParameterSc(0);
-    event.setResult(0.0);
+    event.setUnitSc(null);
+    event.setParameterSc(null);
+    event.setResult(null);
 
     verify(dbService).deleteMeasurementFromEvent(argThat(new ArgumentMatcher<EventModel>() {
 

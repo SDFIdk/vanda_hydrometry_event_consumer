@@ -21,8 +21,8 @@ public interface MeasurementDao {
       	measurement_date_time,
       	vanda_event_timestamp,
       	examination_type_sc,
-      	result,
-      	result_elevation_corrected,
+      	value,
+      	value_elevation_corrected,
       	is_current,
       	created
       from hydrometry.measurement
@@ -47,8 +47,8 @@ public interface MeasurementDao {
       	measurement_date_time,
       	vanda_event_timestamp,
       	examination_type_sc,
-      	result,
-      	result_elevation_corrected,
+      	value,
+      	value_elevation_corrected,
       	is_current,
       	created
       from hydrometry.measurement
@@ -91,8 +91,8 @@ public interface MeasurementDao {
    * @param measurement
    */
   @SqlQuery("""
-      insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, result, result_elevation_corrected, is_current, created)
-      values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :result, :resultElevationCorrected, :isCurrent, now())
+      insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, value, value_elevation_corrected, is_current, created)
+      values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :value, :valueElevationCorrected, :isCurrent, now())
       returning *
       """)
   @RegisterRowMapper(MeasurementMapper.class)

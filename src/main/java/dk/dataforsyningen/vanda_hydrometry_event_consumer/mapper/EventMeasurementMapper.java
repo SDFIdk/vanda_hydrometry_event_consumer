@@ -10,7 +10,7 @@ public class EventMeasurementMapper {
 
     measurement.setStationId(event.getStationId());
     measurement.setMeasurementPointNumber(event.getMeasurementPointNumber());
-    measurement.setResult(event.getResult());
+    measurement.setValue(event.getResult());
     measurement.setVandaEventTimestamp(event.getRecordDateTime());
     measurement.setMeasurementDateTime(event.getMeasurementDateTime());
     measurement.setExaminationTypeSc(event.getExaminationTypeSc());
