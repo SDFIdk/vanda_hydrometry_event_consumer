@@ -148,8 +148,6 @@ public class DatabaseServiceTest {
     m1.setMeasurementPointNumber(measurementPoint1);
     m1.setExaminationTypeSc(mtExamTypeSc1);
     m1.setMeasurementDateTime(dt1DayAgo);
-    System.out.println("dt1DayAgo" + dt1DayAgo);
-    System.out.println(m1.getMeasurementDateTime());
 
     event = new EventModel();
     event.setStationId(stationId);
@@ -158,8 +156,6 @@ public class DatabaseServiceTest {
     event.setParameterSc(mtParamSc1);
     event.setExaminationTypeSc(mtExamTypeSc1);
     event.setMeasurementDateTime(dt1DayAgoString);
-    System.out.println("dt1DayAgoString" + dt1DayAgoString);
-    System.out.println(event.getMeasurementDateTime());
 
     deleteAll(); //clean first if any leftovers
 
