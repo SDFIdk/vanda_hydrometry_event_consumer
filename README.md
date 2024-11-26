@@ -63,6 +63,16 @@ The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" 
 Running statistics are displayed and logged with level INFO when events are received but with a minimum period define by "dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec" in application.properties. 
 If the time between events is greater the statistic reporting period can be longer.
 
+Displayed statistics are of the form:
+
+> Received  _eventCount / totalEventCount_  events (processed a,u,d:  _eventCount / totalEventCount_ , _eventCount / totalEventCount_ , _eventCount / totalEventCount_ ); min/max for partition  _P_ :  _minOffset / maxOffset_ ; event creation timestamp between  _minDateTime_  and  _maxDateTime_  within  _N_  sec
+
+This will show the number of events within the last period of N seconds and the total number of events for the entire time the application was running. It also shows the number of events (as well as the total) divided by the event type: addition, updates or deletes ('a,u,d'). While the received counters shows all received events (both accepted/processed as well as ignored), the a,u,d will only count the accepted (i.e. processed) events.
+
+It will also show the minimum and maximum offset value for each partition P, for which events have been received within the last period of N seconds.
+
+It will also show the minium and maximum event timestamp within the period.
+
 ## Usage
 
 This section shows the operations and parameters that can be used with the application. In order to run the application from the command line (console) use this command:

@@ -7,7 +7,11 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +38,9 @@ public class VandaHEventProcessor {
   private long eventCounterAdd = 0L;
   private long eventCounterUpd = 0L;
   private long eventCounterDel = 0L;
+  private long eventCounterAddTotal = 0L;
+  private long eventCounterUpdTotal = 0L;
+  private long eventCounterDelTotal = 0L;
   private long eventCounterTotal = 0L;
   private OffsetDateTime minRecordTime = null;
   private OffsetDateTime maxRecordTime = null;
@@ -92,16 +99,19 @@ public class VandaHEventProcessor {
 
             dbService.addMeasurementFromEvent(event);
             eventCounterAdd++;
+            eventCounterAddTotal++;
 
           } else if (EVENT_MEASUREMENT_UPDATED.equals(event.getEventType())) {
 
             dbService.updateMeasurementFromEvent(event);
             eventCounterUpd++;
+            eventCounterUpdTotal++;
 
           } else if (EVENT_MEASUREMENT_DELETED.equals(event.getEventType())) {
 
             dbService.deleteMeasurementFromEvent(event);
             eventCounterDel++;
+            eventCounterDelTotal++;
           }
         }
       }
@@ -136,27 +146,38 @@ public class VandaHEventProcessor {
 
         String msg =
             "Received " + eventCounter + "/" + eventCounterTotal +
-                " events (a,u,d:" + eventCounterAdd + "," + eventCounterUpd + "," +
-                eventCounterDel +
-                ") " +
-                (lastReportTimestamp > 0 ?
-                    ("within " + (int) ((now - lastReportTimestamp) / 1000) + " sec") : "") +
-                "\n";
+                " events (processed a,u,d:" + eventCounterAdd + "/" + eventCounterAddTotal +  "," 
+            		+ eventCounterUpd + "/" + eventCounterUpdTotal + "," 
+            		+ eventCounterDel + "/" + eventCounterDelTotal + 
+                "); ";
         // reset the event counter within this report period
         eventCounter = 0;
+        //reset event counters
+        eventCounterAdd = eventCounterUpd = eventCounterDel = 0;
 
         //display offset min/max
-        for (int partition : minOffset.keySet()) {
-          // find the oldest offset for this partition
-          long minimumOffset = minOffset.get(partition);
-          // find the newest offset for this partition
-          long maximumOffset = maxOffset.get(partition);
-          msg +=
-              "min/max for part " + partition + ": " + minimumOffset + "/" + maximumOffset + "; ";
+        Iterator<Entry<Integer, Long>> iteratorMin = minOffset.entrySet().iterator();
+        while (iteratorMin.hasNext()) {
+            Map.Entry<Integer, Long> entryMin = iteratorMin.next();
+            int partition = entryMin.getKey();            
+            // find the oldest offset for this partition
+            long minimumOffset = entryMin.getValue();
+            // find the newest offset for this partition
+            long maximumOffset = maxOffset.get(partition);
+            
+            msg += "min/max for partition " + partition + ": " + minimumOffset + "/" + maximumOffset + "; ";
+            
+            //reset offset min/max
+            iteratorMin.remove();
+            maxOffset.remove(partition);  
         }
-        msg += "event creation timestamp between " + minRecordTime + " and " + maxRecordTime;
+        msg += "event creation timestamp between " + minRecordTime + " and " + maxRecordTime +
+        		(lastReportTimestamp > 0 ?
+                        (" within " + (int) ((now - lastReportTimestamp) / 1000) + " sec") : "");
         // remember the time when the report is shown
         lastReportTimestamp = now;
+        //reset minRecordTime and maxRecordTime
+        minRecordTime = maxRecordTime = null;
 
         logger.info(msg);
       }
