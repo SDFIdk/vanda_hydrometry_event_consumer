@@ -65,7 +65,7 @@ If the time between events is greater the statistic reporting period can be long
 
 Displayed statistics are of the form:
 
-> Received  _eventCount / totalEventCount_  events (processed a,u,d:  _eventCount / totalEventCount_ , _eventCount / totalEventCount_ , _eventCount / totalEventCount_ ); min/max for part  _P_ :  _minOffset / maxOffset_ ; event creation timestamp between  _minDateTime_  and  _maxDateTime_  within  _N_  sec
+> Received  _eventCount / totalEventCount_  events (processed a,u,d:  _eventCount / totalEventCount_ , _eventCount / totalEventCount_ , _eventCount / totalEventCount_ ); min/max for partition  _P_ :  _minOffset / maxOffset_ ; event creation timestamp between  _minDateTime_  and  _maxDateTime_  within  _N_  sec
 
 This will show the number of events within the last period of N seconds and the total number of events for the entire time the application was running. It also shows the number of events (as well as the total) divided by the event type: addition, updates or deletes ('a,u,d'). While the received counters shows all received events (both accepted/processed as well as ignored), the a,u,d will only count the accepted (i.e. processed) events.
 

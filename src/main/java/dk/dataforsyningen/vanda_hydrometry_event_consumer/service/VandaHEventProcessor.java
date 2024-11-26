@@ -162,7 +162,7 @@ public class VandaHEventProcessor {
             // find the newest offset for this partition
             long maximumOffset = maxOffset.get(partition);
             
-            msg += "min/max for part " + partition + ": " + minimumOffset + "/" + maximumOffset + "; ";
+            msg += "min/max for partition " + partition + ": " + minimumOffset + "/" + maximumOffset + "; ";
             
             //reset offset min/max
             iteratorMin.remove();
