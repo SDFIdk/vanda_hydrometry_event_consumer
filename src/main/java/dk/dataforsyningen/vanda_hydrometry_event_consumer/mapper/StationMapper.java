@@ -1,13 +1,12 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.mapper;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.MeasurementType;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
-
 
 public class StationMapper implements RowMapper<Station> {
 
@@ -19,13 +18,13 @@ public class StationMapper implements RowMapper<Station> {
     station.setOldStationNumber(rs.getString("old_station_number"));
     station.setName(rs.getString("name"));
     station.setStationOwnerName(rs.getString("station_owner_name"));
-    station.setLocationX((Double) rs.getObject("location_x"));
-    station.setLocationY((Double) rs.getObject("location_y"));
-    station.setLocationSrid((Integer) rs.getObject("location_srid"));
+    station.setLocationX(rs.getObject("location_x", Double.class));
+    station.setLocationY(rs.getObject("location_y", Double.class));
+    station.setLocationSrid(rs.getObject("location_srid", Integer.class));
     station.setLocationType(rs.getString("location_type"));
     station.setDescription(rs.getString("description"));
-    station.setCreated(VandaHUtility.toOffsetDate(rs.getTimestamp("created"), false));
-    station.setUpdated(VandaHUtility.toOffsetDate(rs.getTimestamp("updated"), false));
+    station.setUpdated(rs.getObject("created", OffsetDateTime.class));
+    station.setUpdated(rs.getObject("updated", OffsetDateTime.class));
 
     if (rs.getObject("examination_type_sc") != null) {
       MeasurementType mt = new MeasurementType();

@@ -6,10 +6,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.VandaHEventConsumerConfig;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,10 +81,10 @@ public class VandaHEventProcessorTest {
     event.setUnitSc(mtUnitSc);
     event.setParameterSc(mtParamSc);
     event.setExaminationTypeSc(mtExamTypeSc);
-    event.setMeasurementDateTime(VandaHUtility.parseForAPI(dateTime));
+    event.setMeasurementDateTime(dateTime);
     event.setReasonCodeSc(reasonCodeSc);
     event.setPartition(1);
-    event.setRecordDateTime(VandaHUtility.parseToUtcOffsetDateTime(recordDateTime));
+    event.setRecordDateTime(OffsetDateTime.parse(recordDateTime));
 
   }
 
