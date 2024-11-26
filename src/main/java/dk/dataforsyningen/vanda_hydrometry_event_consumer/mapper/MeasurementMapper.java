@@ -15,14 +15,13 @@ public class MeasurementMapper implements RowMapper<Measurement> {
     Measurement m = new Measurement();
 
     m.setStationId(rs.getString("station_id"));
-    m.setValue((Double) rs.getObject("value"));
-    m.setValueElevationCorrected((Double) rs.getObject("value_elevation_corrected"));
+    m.setValue(rs.getObject("value", Double.class));
+    m.setValueElevationCorrected(rs.getObject("value_elevation_corrected", Double.class));
     m.setIsCurrent(rs.getBoolean("is_current"));
-    m.setMeasurementDateTime((OffsetDateTime) rs.getObject("measurement_date_time"));
-
-    m.setCreated((OffsetDateTime) rs.getObject("created"));
-    m.setVandaEventTimestamp((OffsetDateTime) rs.getObject("vanda_event_timestamp"));
-    m.setExaminationTypeSc((Integer) rs.getObject("examination_type_sc"));
+    m.setMeasurementDateTime(rs.getObject("measurement_date_time", OffsetDateTime.class));
+    m.setCreated(rs.getObject("created", OffsetDateTime.class));
+    m.setVandaEventTimestamp(rs.getObject("vanda_event_timestamp", OffsetDateTime.class));
+    m.setExaminationTypeSc(rs.getObject("examination_type_sc", Integer.class));
     m.setMeasurementPointNumber(rs.getInt("measurement_point_number"));
 
     return m;

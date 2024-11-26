@@ -18,13 +18,13 @@ public class StationMapper implements RowMapper<Station> {
     station.setOldStationNumber(rs.getString("old_station_number"));
     station.setName(rs.getString("name"));
     station.setStationOwnerName(rs.getString("station_owner_name"));
-    station.setLocationX((Double) rs.getObject("location_x"));
-    station.setLocationY((Double) rs.getObject("location_y"));
-    station.setLocationSrid((Integer) rs.getObject("location_srid"));
+    station.setLocationX(rs.getObject("location_x", Double.class));
+    station.setLocationY(rs.getObject("location_y", Double.class));
+    station.setLocationSrid(rs.getObject("location_srid", Integer.class));
     station.setLocationType(rs.getString("location_type"));
     station.setDescription(rs.getString("description"));
-    station.setCreated((OffsetDateTime) rs.getObject("created"));
-    station.setUpdated((OffsetDateTime) rs.getObject("updated"));
+    station.setUpdated(rs.getObject("created", OffsetDateTime.class));
+    station.setUpdated(rs.getObject("updated", OffsetDateTime.class));
 
     if (rs.getObject("examination_type_sc") != null) {
       MeasurementType mt = new MeasurementType();
