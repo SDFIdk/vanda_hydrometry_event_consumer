@@ -1,9 +1,11 @@
 package dk.dataforsyningen.vanda_hydrometry_event_consumer.service;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.VandaHEventConsumerConfig;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -63,10 +65,11 @@ public class VandaHEventProcessor {
 
     try {
       // Process each message consumed from Azure Event Hub
-      EventModel event = EventModel.fromJson(record.value());
+      EventModel event = new ObjectMapper().readValue(record.value(), EventModel.class);
+
       event.setPartition(record.partition());
       event.setOffset(record.offset());
-      event.setRecordDateTime(VandaHUtility.timestampToOffsetDateTimeUtc(record.timestamp()));
+      event.setRecordDateTime(OffsetDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneOffset.UTC));
 
       //skip undesired events
       if (acceptEvent(event)) {

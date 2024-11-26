@@ -5,6 +5,8 @@ target/
 !**/src/test/**/target/
 *.log
 *.log*gz
+/docker/reports/
+/src/main/resources/application-dev.properties
 
 ### STS ###
 .apt_generated

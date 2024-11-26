@@ -1,0 +1,36 @@
+name: "unittest"
+services:
+  # Local development postgres instance with postgis extension
+    database:
+        container_name: "vanda_hydrometry_event_consumer_database"
+        image: "postgis/postgis:17-3.5-alpine"
+        ports:
+          - "5432:5432"
+        networks:
+          - "default"
+        volumes:
+            - ../db/sql/hydrometry.sql:/docker-entrypoint-initdb.d/hydrometry.sql
+        environment:
+            - TZ=Europe/Copenhagen
+            - POSTGRES_USER=test_user
+            - POSTGRES_PASSWORD=test_password
+            - POSTGRES_DB=hydrometry
+
+    unittest:
+        container_name: "vanda_hydrometry_event_consumer_unittest"
+        build:
+          context: ../.
+          dockerfile: docker/Dockerfile_build
+        environment:
+          - "TZ=Europe/Copenhagen"
+          - "SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/hydrometry?user=test_user&password=test_password"
+        networks:
+          - "default"
+        volumes:
+          - ./reports:/vanda_hydrometry_event_consumer/target/surefire-reports
+        command: bash -c "sleep 7s &&
+          mvn test"
+
+networks:
+  default:
+    name: "vanda_hydrometry_event_consumer_unittest_network"

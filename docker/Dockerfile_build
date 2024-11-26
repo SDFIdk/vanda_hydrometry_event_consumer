@@ -1,0 +1,14 @@
+# Builder
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+
+RUN apk upgrade --available --no-cache
+
+WORKDIR /vanda_hydrometry_event_consumer
+
+COPY pom.xml .
+
+RUN mvn -e -B dependency:resolve
+
+COPY src ./src
+
+RUN mvn -e -B package -DskipTests

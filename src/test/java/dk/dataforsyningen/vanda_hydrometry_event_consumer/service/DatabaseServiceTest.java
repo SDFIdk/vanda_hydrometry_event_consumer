@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import dk.dataforsyningen.vanda_hydrometry_event_consumer.VandaHUtility;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.config.VandaHEventConsumerConfig;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.EventModel;
 import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Measurement;
@@ -20,6 +19,8 @@ import dk.dataforsyningen.vanda_hydrometry_event_consumer.model.Station;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.AfterEach;
@@ -71,6 +72,12 @@ public class DatabaseServiceTest {
   private Measurement m1;
   private EventModel event;
 
+  private String dt1DayAgoString;
+  private String dt10MinAgoString;
+  private String dt5MinAgoString;
+  private String dtNowString;
+  private String dt5MinAfterString;
+
   private OffsetDateTime dt1DayAgo;
   private OffsetDateTime dt10MinAgo;
   private OffsetDateTime dt5MinAgo;
@@ -95,11 +102,17 @@ public class DatabaseServiceTest {
       return;
     }
 
-    dtNow = VandaHUtility.parseForAPI(OffsetDateTime.now().toString());
-    dt5MinAgo = VandaHUtility.parseForAPI(dtNow.minusMinutes(5).toString());
-    dt10MinAgo = VandaHUtility.parseForAPI(dtNow.minusMinutes(10).toString());
-    dt1DayAgo = VandaHUtility.parseForAPI(dtNow.minusDays(1).toString());
-    dt5MinAfter = VandaHUtility.parseForAPI(dtNow.plusMinutes(5).toString());
+    dtNowString = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+    dt5MinAgoString = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+    dt10MinAgoString = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(10).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+    dt1DayAgoString = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+    dt5MinAfterString = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+
+    dtNow = OffsetDateTime.parse(dtNowString);
+    dt5MinAgo = OffsetDateTime.parse(dt5MinAgoString);
+    dt10MinAgo = OffsetDateTime.parse(dt10MinAgoString);
+    dt1DayAgo = OffsetDateTime.parse(dt1DayAgoString);
+    dt5MinAfter = OffsetDateTime.parse(dt5MinAfterString);
 
     mt1 = new MeasurementType();
     mt1.setParameterSc(mtParamSc1);
@@ -142,7 +155,7 @@ public class DatabaseServiceTest {
     event.setUnitSc(mtUnitSc1);
     event.setParameterSc(mtParamSc1);
     event.setExaminationTypeSc(mtExamTypeSc1);
-    event.setMeasurementDateTime(dt1DayAgo);
+    event.setMeasurementDateTime(dt1DayAgoString);
 
     deleteAll(); //clean first if any leftovers
 

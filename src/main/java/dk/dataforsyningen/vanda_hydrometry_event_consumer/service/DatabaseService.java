@@ -130,7 +130,7 @@ public class DatabaseService {
    * @throws SQLException
    */
   @Transactional
-  public Measurement updateMeasurementFromEvent(EventModel event) throws SQLException {
+  public Measurement updateMeasurementFromEvent(EventModel event) {
 
     Measurement newMeasurement = null;
 
