@@ -23,7 +23,7 @@ public class StationMapper implements RowMapper<Station> {
     station.setLocationSrid(rs.getObject("location_srid", Integer.class));
     station.setLocationType(rs.getString("location_type"));
     station.setDescription(rs.getString("description"));
-    station.setUpdated(rs.getObject("created", OffsetDateTime.class));
+    station.setCreated(rs.getObject("created", OffsetDateTime.class));
     station.setUpdated(rs.getObject("updated", OffsetDateTime.class));
 
     if (rs.getObject("examination_type_sc") != null) {
