@@ -41,9 +41,9 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from hydrometry.station s left join hydrometry.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt 
       	on s.station_id = smt.station_id
-      	left join hydrometry.measurement_type mt
+      	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc
       """)
   @RegisterRowMapper(StationMapper.class)
@@ -75,9 +75,9 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from hydrometry.station s left join hydrometry.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt 
       	on s.station_id = smt.station_id
-      	left join hydrometry.measurement_type mt
+      	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc 
       where s.station_id = :stationId
       """)
@@ -110,9 +110,9 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from hydrometry.station s left join hydrometry.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt 
       	on s.station_id = smt.station_id
-      	left join hydrometry.measurement_type mt
+      	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc 
       where mt.examination_type_sc = :examinationTypeSc
       """)
@@ -128,7 +128,7 @@ public interface StationDao {
    */
   @SqlQuery("""
       select count(*) > 0 as is_supported
-      from hydrometry.station_measurement_type smt 
+      from vanda.station_measurement_type smt 
       where smt.station_id = :stationId 
       	and smt.examination_type_sc = :examinationTypeSc
       """)
@@ -142,7 +142,7 @@ public interface StationDao {
    * @return the station
    */
   @SqlUpdate("""
-      insert into hydrometry.station
+      insert into vanda.station
       (station_id, old_station_number, name, station_owner_name, location, location_type, description, created, updated)
       values ( :stationId, :oldStationNumber, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)), :locationType, :description, now(), now())
       on conflict (station_id) do update
@@ -162,7 +162,7 @@ public interface StationDao {
    * @param stations
    */
   @SqlBatch("""
-      insert into hydrometry.station
+      insert into vanda.station
       (station_id, old_station_number, name, station_owner_name, location, location_type, description, created, updated)
       values ( :stationId, :oldStationNumber, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)), :locationType, :description, now(), now())
       on conflict (station_id) do update
@@ -183,7 +183,7 @@ public interface StationDao {
    * @param examinationTypeSc
    */
   @SqlUpdate("""
-      insert into hydrometry.station_measurement_type (station_id, examination_type_sc)
+      insert into vanda.station_measurement_type (station_id, examination_type_sc)
       values (:stationId, :examinationTypeSc)
       on conflict do nothing
       """)
@@ -196,7 +196,7 @@ public interface StationDao {
    * @param examinationTypeSc
    */
   @SqlBatch("""
-      insert into hydrometry.station_measurement_type (station_id, examination_type_sc)
+      insert into vanda.station_measurement_type (station_id, examination_type_sc)
       values (:stationId, :examinationTypeSc)
       on conflict do nothing
       """)
@@ -208,7 +208,7 @@ public interface StationDao {
    *
    * @param station id
    */
-  @SqlUpdate("delete from hydrometry.station where station_id = :id")
+  @SqlUpdate("delete from vanda.station where station_id = :id")
   void deleteStation(@Bind String id);
 
   /**
@@ -216,10 +216,10 @@ public interface StationDao {
    *
    * @param station id
    */
-  @SqlUpdate("delete from hydrometry.station_measurement_type where station_id = :id")
+  @SqlUpdate("delete from vanda.station_measurement_type where station_id = :id")
   void deleteRelationToMeasurementTypeByStation(@Bind String id);
 
-  @SqlQuery("select count(*) from hydrometry.station")
+  @SqlQuery("select count(*) from vanda.station")
   int count();
 
 }

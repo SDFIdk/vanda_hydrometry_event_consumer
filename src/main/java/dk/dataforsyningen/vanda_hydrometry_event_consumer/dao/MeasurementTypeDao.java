@@ -29,7 +29,7 @@ public interface MeasurementTypeDao {
       	parameter,
       	unit_sc,
       	unit
-      from hydrometry.measurement_type
+      from vanda.measurement_type
       where examination_type_sc = :examinationTypeSc
       """)
   @RegisterRowMapper(MeasurementTypeMapper.class)
@@ -41,7 +41,7 @@ public interface MeasurementTypeDao {
    * @param measurementTypes List
    */
   @SqlBatch("""
-      insert into hydrometry.measurement_type
+      insert into vanda.measurement_type
       (parameter_sc, parameter, examination_type_sc, examination_type, unit_sc, unit)
       values (:parameterSc, :parameter, :examinationTypeSc, :examinationType, :unitSc, :unit)
       on conflict (examination_type_sc) do update
@@ -56,6 +56,6 @@ public interface MeasurementTypeDao {
    *
    * @param examinationTypeSc
    */
-  @SqlUpdate("delete from hydrometry.measurement_type where examination_type_sc = :examinationTypeSc")
+  @SqlUpdate("delete from vanda.measurement_type where examination_type_sc = :examinationTypeSc")
   void deleteMeasurementType(@Bind int examinationTypeSc);
 }

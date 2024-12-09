@@ -25,7 +25,7 @@ public interface MeasurementDao {
       	value_elevation_corrected,
       	is_current,
       	created
-      from hydrometry.measurement
+      from vanda.measurement
       where
       	station_id = :stationId
       	and examination_type_sc = :examinationTypeSc
@@ -51,7 +51,7 @@ public interface MeasurementDao {
       	value_elevation_corrected,
       	is_current,
       	created
-      from hydrometry.measurement
+      from vanda.measurement
       where
       	station_id = :stationId
       	and examination_type_sc = :examinationTypeSc
@@ -68,7 +68,7 @@ public interface MeasurementDao {
 
   @SqlQuery("""
       select count(*) > 0
-      from hydrometry.measurement
+      from vanda.measurement
       where
       	station_id = :stationId
       	and examination_type_sc = :examinationTypeSc
@@ -91,7 +91,7 @@ public interface MeasurementDao {
    * @param measurement
    */
   @SqlQuery("""
-      insert into hydrometry.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, value, value_elevation_corrected, is_current, created)
+      insert into vanda.measurement (station_id, measurement_date_time, vanda_event_timestamp, measurement_point_number, examination_type_sc, value, value_elevation_corrected, is_current, created)
       values (:stationId, :measurementDateTime, :vandaEventTimestamp, :measurementPointNumber, :examinationTypeSc, :value, :valueElevationCorrected, :isCurrent, now())
       returning *
       """)
@@ -106,7 +106,7 @@ public interface MeasurementDao {
    * @param measurement
    */
   @SqlUpdate("""
-      update hydrometry.measurement set is_current = false
+      update vanda.measurement set is_current = false
       where
       	station_id = :stationId
       	and measurement_date_time = :measurementDateTime
@@ -122,7 +122,7 @@ public interface MeasurementDao {
    */
   @SqlUpdate("""
       delete
-      from hydrometry.measurement
+      from vanda.measurement
       where
       	station_id = :stationId
       """)
@@ -138,7 +138,7 @@ public interface MeasurementDao {
    * @return number of records
    */
   @SqlQuery("""
-      select count(*) from hydrometry.measurement
+      select count(*) from vanda.measurement
       where
       	station_id = :stationId
       	and measurement_date_time = :measurementDateTime
