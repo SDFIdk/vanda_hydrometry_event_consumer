@@ -1,4 +1,4 @@
-name: "unittest"
+name: "vanda_hydrometry_event_consumer_unittest"
 services:
   # Local development postgres instance with postgis extension
     database:
