@@ -12,7 +12,7 @@ public class Station {
 
   String operatorStationId = null;
 
-  String oldStationNumber = null;
+  String stationIdSav = null;
 
   String name = null;
 
@@ -59,12 +59,12 @@ public class Station {
     this.operatorStationId = operatorStationId;
   }
 
-  public String getOldStationNumber() {
-    return oldStationNumber;
+  public String getStationIdSav() {
+    return stationIdSav;
   }
 
-  public void setOldStationNumber(String oldStationNumber) {
-    this.oldStationNumber = oldStationNumber;
+  public void setStationIdSav(String stationIdSav) {
+    this.stationIdSav = stationIdSav;
   }
 
   public String getName() {
@@ -153,7 +153,7 @@ public class Station {
         "\n\tstationUid=" + stationUid +
         ",\n\tstationId=" + stationId +
         ",\n\toperatorStationId=" + operatorStationId +
-        ",\n\toldStationNumber=" + oldStationNumber +
+        ",\n\tstationIdSav=" + stationIdSav +
         ",\n\tname=" + name +
         ",\n\tstationOwnerName=" + stationOwnerName +
         ",\n\tlocation= [x=" + locationX + ", y=" + locationY + ", srid=" + locationSrid + "]" +
@@ -168,7 +168,7 @@ public class Station {
   @Override
   public int hashCode() {
     return Objects.hash(name, created, description, locationX, locationY, locationSrid,
-        locationType, oldStationNumber,
+        locationType, stationIdSav,
         operatorStationId, stationId, stationOwnerName, stationUid, updated);
   }
 
@@ -192,7 +192,7 @@ public class Station {
         && Objects.equals(description, other.description)
         && Objects.equals(locationSrid, other.locationSrid) &&
         Objects.equals(locationX, other.locationX) && Objects.equals(locationY, other.locationY)
-        && Objects.equals(oldStationNumber, other.oldStationNumber)
+        && Objects.equals(stationIdSav, other.stationIdSav)
         && Objects.equals(operatorStationId, other.operatorStationId)
         && Objects.equals(created, other.created)
         && Objects.equals(updated, other.updated);

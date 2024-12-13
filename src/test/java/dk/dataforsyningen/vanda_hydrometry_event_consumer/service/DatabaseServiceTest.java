@@ -38,7 +38,7 @@ public class DatabaseServiceTest {
   private final String stationName = "name";
   private final String stationOwner = "owner";
   private final String stationDescription = "description";
-  private final String stationOldNumber = "12345678";
+  private final String stationIdSav = "12345678";
   private final double locationX = 12.34;
   private final double locationY = 56.78;
   private final int locationSrid = 25832;
@@ -135,7 +135,7 @@ public class DatabaseServiceTest {
     station1.setName(stationName);
     station1.setStationOwnerName(stationOwner);
     station1.setDescription(stationDescription);
-    station1.setOldStationNumber(stationOldNumber);
+    station1.setStationIdSav(stationIdSav);
     station1.setLocationX(locationX);
     station1.setLocationY(locationY);
     station1.setLocationSrid(locationSrid);
