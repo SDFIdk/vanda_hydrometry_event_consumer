@@ -97,7 +97,7 @@ public class DatabaseService {
     boolean delayed = isEventDelayed(event);
 
     if (!delayed) {
-      logger.info("Deactivate older records of measurement:" + measurement + " measurements");
+      logger.info("Deactivate older record of " + measurement + " measurement");
       //inactivate previous versions
       int nr = measurementDao.inactivateMeasurementHistory(measurement);
 
@@ -107,7 +107,7 @@ public class DatabaseService {
 
       measurement.setIsCurrent(true); //make sure this will be the current measurement
 
-      logger.info("Insert/add active record of measurement:" + measurement + " measurement");
+      logger.info("Insert/add active record of " + measurement + " measurement");
       //add the new measurement
       newMeasurement = measurementDao.insertMeasurement(measurement);
     } else {
