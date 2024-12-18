@@ -39,9 +39,9 @@ public class DatabaseServiceTest {
   private final String stationOwner = "owner";
   private final String stationDescription = "description";
   private final String stationIdSav = "12345678";
-  private final double locationX = 12.34;
-  private final double locationY = 56.78;
-  private final int locationSrid = 25832;
+  private final double geometryX = 12.34;
+  private final double geometryY = 56.78;
+  private final int geometrySrid = 25832;
 
   private final int mtParamSc1 = 1233;
   private final String mtParam1 = "WaterLevel";
@@ -136,9 +136,9 @@ public class DatabaseServiceTest {
     station1.setStationOwnerName(stationOwner);
     station1.setDescription(stationDescription);
     station1.setStationIdSav(stationIdSav);
-    station1.setLocationX(locationX);
-    station1.setLocationY(locationY);
-    station1.setLocationSrid(locationSrid);
+    station1.setGeometryX(geometryX);
+    station1.setGeometryY(geometryY);
+    station1.setGeometrySrid(geometrySrid);
     station1.getMeasurementTypes().add(mt1);
     station1.getMeasurementTypes().add(mt2);
 

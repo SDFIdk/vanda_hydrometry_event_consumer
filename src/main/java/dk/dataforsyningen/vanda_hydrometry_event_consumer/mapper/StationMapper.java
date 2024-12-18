@@ -18,9 +18,9 @@ public class StationMapper implements RowMapper<Station> {
     station.setStationIdSav(rs.getString("station_id_sav"));
     station.setName(rs.getString("name"));
     station.setStationOwnerName(rs.getString("station_owner_name"));
-    station.setLocationX(rs.getObject("location_x", Double.class));
-    station.setLocationY(rs.getObject("location_y", Double.class));
-    station.setLocationSrid(rs.getObject("location_srid", Integer.class));
+    station.setGeometryX(rs.getObject("geometry_x", Double.class));
+    station.setGeometryY(rs.getObject("geometry_y", Double.class));
+    station.setGeometrySrid(rs.getObject("geometry_srid", Integer.class));
     station.setLocationType(rs.getString("location_type"));
     station.setDescription(rs.getString("description"));
     station.setCreated(rs.getObject("created", OffsetDateTime.class));

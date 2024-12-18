@@ -18,11 +18,11 @@ public class Station {
 
   String stationOwnerName = null;
 
-  Double locationX;
+  Double geometryX;
 
-  Double locationY;
+  Double geometryY;
 
-  Integer locationSrid;
+  Integer geometrySrid;
 
   String locationType = null;
 
@@ -83,28 +83,28 @@ public class Station {
     this.stationOwnerName = stationOwnerName;
   }
 
-  public Double getLocationX() {
-    return locationX;
+  public Double getGeometryX() {
+    return geometryX;
   }
 
-  public void setLocationX(Double x) {
-    this.locationX = x;
+  public void setGeometryX(Double x) {
+    this.geometryX = x;
   }
 
-  public Double getLocationY() {
-    return locationY;
+  public Double getGeometryY() {
+    return geometryY;
   }
 
-  public void setLocationY(Double y) {
-    this.locationY = y;
+  public void setGeometryY(Double y) {
+    this.geometryY = y;
   }
 
-  public Integer getLocationSrid() {
-    return locationSrid;
+  public Integer getGeometrySrid() {
+    return geometrySrid;
   }
 
-  public void setLocationSrid(Integer srid) {
-    this.locationSrid = srid;
+  public void setGeometrySrid(Integer srid) {
+    this.geometrySrid = srid;
   }
 
   public String getDescription() {
@@ -156,7 +156,7 @@ public class Station {
         ",\n\tstationIdSav=" + stationIdSav +
         ",\n\tname=" + name +
         ",\n\tstationOwnerName=" + stationOwnerName +
-        ",\n\tlocation= [x=" + locationX + ", y=" + locationY + ", srid=" + locationSrid + "]" +
+        ",\n\tgeometry= [x=" + geometryX + ", y=" + geometryY + ", srid=" + geometrySrid + "]" +
         ",\n\tlocationType=" + locationType +
         ",\n\tdescription=" + description +
         ",\n\tcreated=" + created +
@@ -167,7 +167,7 @@ public class Station {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, created, description, locationX, locationY, locationSrid,
+    return Objects.hash(name, created, description, geometryX, geometryY, geometrySrid,
         locationType, stationIdSav,
         operatorStationId, stationId, stationOwnerName, stationUid, updated);
   }
@@ -190,8 +190,8 @@ public class Station {
         && Objects.equals(name, other.name)
         && Objects.equals(locationType, other.locationType)
         && Objects.equals(description, other.description)
-        && Objects.equals(locationSrid, other.locationSrid) &&
-        Objects.equals(locationX, other.locationX) && Objects.equals(locationY, other.locationY)
+        && Objects.equals(geometrySrid, other.geometrySrid) &&
+        Objects.equals(geometryX, other.geometryX) && Objects.equals(geometryY, other.geometryY)
         && Objects.equals(stationIdSav, other.stationIdSav)
         && Objects.equals(operatorStationId, other.operatorStationId)
         && Objects.equals(created, other.created)

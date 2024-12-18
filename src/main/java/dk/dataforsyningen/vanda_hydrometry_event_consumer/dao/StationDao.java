@@ -12,7 +12,6 @@ import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-
 @LogSqlFactory
 public interface StationDao {
 
@@ -27,10 +26,10 @@ public interface StationDao {
       	s.name,
       	s.station_id_sav,
       	s.station_owner_name,
-      	s.location,
-      	ST_X(location) as location_x,
-      	ST_Y(location) as location_y,
-      	ST_SRID(location) as location_srid,
+      	s.geometry,
+      	ST_X(geometry) as geometry_x,
+      	ST_Y(geometry) as geometry_y,
+      	ST_SRID(geometry) as geometry_srid,
       	s.location_type,
       	s.description,
       	s.created,
@@ -41,7 +40,7 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from vanda.station s left join vanda.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt
       	on s.station_id = smt.station_id
       	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc
@@ -61,10 +60,10 @@ public interface StationDao {
       	s.name,
       	s.station_id_sav,
       	s.station_owner_name,
-      	s.location,
-      	ST_X(location) as location_x,
-      	ST_Y(location) as location_y,
-      	ST_SRID(location) as location_srid,
+      	s.geometry,
+      	ST_X(geometry) as geometry_x,
+      	ST_Y(geometry) as geometry_y,
+      	ST_SRID(geometry) as geometry_srid,
       	s.location_type,
       	s.description,
       	s.created,
@@ -75,7 +74,7 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from vanda.station s left join vanda.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt
       	on s.station_id = smt.station_id
       	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc 
@@ -96,10 +95,10 @@ public interface StationDao {
       	s.name,
       	s.station_id_sav,
       	s.station_owner_name,
-      	s.location,
-      	ST_X(location) as location_x,
-      	ST_Y(location) as location_y,
-      	ST_SRID(location) as location_srid,
+      	s.geometry,
+      	ST_X(geometry) as geometry_x,
+      	ST_Y(geometry) as geometry_y,
+      	ST_SRID(geometry) as geometry_srid,
       	s.location_type,
       	s.description,
       	s.created,
@@ -110,7 +109,7 @@ public interface StationDao {
       	mt.examination_type,
       	mt.unit_sc,
       	mt.unit
-      from vanda.station s left join vanda.station_measurement_type smt 
+      from vanda.station s left join vanda.station_measurement_type smt
       	on s.station_id = smt.station_id
       	left join vanda.measurement_type mt
       	on smt.examination_type_sc = mt.examination_type_sc 
@@ -128,7 +127,7 @@ public interface StationDao {
    */
   @SqlQuery("""
       select count(*) > 0 as is_supported
-      from vanda.station_measurement_type smt 
+      from vanda.station_measurement_type smt
       where smt.station_id = :stationId 
       	and smt.examination_type_sc = :examinationTypeSc
       """)
@@ -136,20 +135,20 @@ public interface StationDao {
   boolean isExaminationTypeScSupported(@Bind String stationId, @Bind int examinationTypeSc);
 
   /**
-   * Adds (or updates if exists) (only) the station if it does not exists.
+   * Adds (or updates if exists) (only) the station if it does not exist.
    *
    * @param station
    * @return the station
    */
   @SqlUpdate("""
       insert into vanda.station
-      (station_id, station_id_sav, name, station_owner_name, location, location_type, description, created, updated)
-      values ( :stationId, :stationIdSav, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)), :locationType, :description, now(), now())
+      (station_id, station_id_sav, name, station_owner_name, geometry, location_type, description, created, updated)
+      values ( :stationId, :stationIdSav, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:geometryX, :geometryY), :geometrySrid::int)), :locationType, :description, now(), now())
       on conflict (station_id) do update
       	set station_id_sav = :stationIdSav,
       	name = :name,
       	station_owner_name = :stationOwnerName,
-      	location = (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)),
+      	geometry = (ST_SetSRID(ST_MakePoint(:geometryX, :geometryY), :geometrySrid::int)),
       	location_type = :locationType,
       	description = :description,
       	updated = now()
@@ -163,13 +162,13 @@ public interface StationDao {
    */
   @SqlBatch("""
       insert into vanda.station
-      (station_id, station_id_sav, name, station_owner_name, location, location_type, description, created, updated)
-      values ( :stationId, :stationIdSav, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)), :locationType, :description, now(), now())
+      (station_id, station_id_sav, name, station_owner_name, geometry, location_type, description, created, updated)
+      values ( :stationId, :stationIdSav, :name, :stationOwnerName, (ST_SetSRID(ST_MakePoint(:geometryX, :geometryY), :geometrySrid::int)), :locationType, :description, now(), now())
       on conflict (station_id) do update
       	set station_id_sav = :stationIdSav,
       	name = :name,
       	station_owner_name = :stationOwnerName,
-      	location = (ST_SetSRID(ST_MakePoint(:locationX, :locationY), :locationSrid::int)),
+      	geometry = (ST_SetSRID(ST_MakePoint(:geometryX, :geometryY), :geometrySrid::int)),
       	location_type = :locationType,
       	description = :description,
       	updated = now()
