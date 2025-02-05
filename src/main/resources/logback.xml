@@ -6,13 +6,17 @@
     <include resource="org/springframework/boot/logging/logback/file-appender.xml"/>
 
     <property name="LOG_FILE" value="vandah-event" />
-    <property name="LOG_DIR" value="/log" />
+    <property name="LOG_DIR" value="log" />
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/${LOG_FILE}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/${LOG_FILE}-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-14}</maxHistory>
         </rollingPolicy>
+        <encoder>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+                <charset>${FILE_LOG_CHARSET}</charset>
+        </encoder>
     </appender>
 
     <!-- Stop output INFO at start -->
