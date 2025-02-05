@@ -40,8 +40,6 @@ public class VandaHEventConsumerRunner implements CommandLineRunner {
             " commands will start the event hub client that will receive and process events.\n");
 
         System.out.println(
-            "Use the option --displayRawData to display the received (and processed) raw json events to the console.");
-        System.out.println(
             "Use the option --displayAll to display all the received (not only processed) raw json events to the console.");
         System.out.println(
             "Use the option --displayData to display the mapped data at the console (only processed events).");

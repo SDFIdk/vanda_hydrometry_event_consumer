@@ -56,9 +56,7 @@ Note that the API retrieved data, since they are not events, they do not contain
 
 ### Logging
 
-Activate debug level for logging to get received raw event into the log file. Activate trace level to get both raw events and executed queries into the log file.
-
-The property "dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents" in application.properties can be set to "all" so that all events are logged or to "processed" so only the processed events are logged.
+Activate info level for logging to get received processed raw event into the log file. Activate trace level to get both raw events and executed queries into the log file.
 
 Running statistics are displayed and logged with level INFO when events are received but with a minimum period define by "dk.dataforsyningen.vanda_hydrometry_event_consumer.reportPeriodSec" in application.properties. 
 If the time between events is greater the statistic reporting period can be longer.
@@ -97,13 +95,9 @@ In order to filter which event types to accept and process use the option --even
 
 In order to display the received (decoded into the internal model) data in the console (or redirect the output into a file) so the user can inspect it, use:
 
-	start --displayData	
-	
-In order to display the raw json data received from the event hub use the following:
+	start --displayData
 
-	start --displayRawData	
-	
-... however this will only display the raw data of the processed events. In order to display the raw data of all received events use:
+In order to display the raw data of all received events use:
 
 	start --displayAll	
 	

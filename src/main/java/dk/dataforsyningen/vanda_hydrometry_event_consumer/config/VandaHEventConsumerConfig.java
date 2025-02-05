@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class VandaHEventConsumerConfig {
 
-  @Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.loggingEvents:#{null}}")
-  public String loggingEvents;
   //enables DAO and database service testing - needs a DB connection
   @Value("${dk.dataforsyningen.vanda_hydrometry_event_consumer.database.test:#{false}}")
   public boolean enableDbTest; //used only within testing
@@ -19,8 +17,6 @@ public class VandaHEventConsumerConfig {
   private String displayData;  //boolean
   @Value("${displayall:#{null}}")
   private String displayAll;  //boolean
-  @Value("${displayrawdata:#{null}}")
-  private String displayRawData;  //boolean
   @Value("${savedb:#{null}}")
   private String saveDb;  //boolean
   @Value("${events:#{null}}")
@@ -61,10 +57,6 @@ public class VandaHEventConsumerConfig {
     return displayData != null;
   }
 
-  public boolean isDisplayRawData() {
-    return displayRawData != null;
-  }
-
   public boolean isDisplayAll() {
     return displayAll != null;
   }
@@ -93,14 +85,6 @@ public class VandaHEventConsumerConfig {
     return enableDbTest;
   }
 
-  public boolean isLoggingProcessedEvents() {
-    return loggingEvents != null && loggingEvents.equalsIgnoreCase("processed");
-  }
-
-  public boolean isLoggingAllEvents() {
-    return loggingEvents != null && loggingEvents.equalsIgnoreCase("all");
-  }
-
   public List<Integer> getExaminationTypeSc() {
     ArrayList<Integer> output = new ArrayList<>();
     if (examinationTypeSc != null && !examinationTypeSc.isEmpty()) {
@@ -122,11 +106,8 @@ public class VandaHEventConsumerConfig {
         ",\ncommand=" + getCommand() +
         ",\nisDisplayAll=" + isDisplayAll() +
         ",\nisDisplayData=" + isDisplayData() +
-        ",\nisDisplayRawData=" + isDisplayRawData() +
         ",\nisSaveDb=" + isSaveDb() +
         ",\ngetReportPeriodSec=" + getReportPeriodSec() +
-        ",\nloggingProcessedEvents=" + isLoggingProcessedEvents() +
-        ",\nloggingAllEvents=" + isLoggingAllEvents() +
         ",\nevents=" + events
         + "\n]";
   }

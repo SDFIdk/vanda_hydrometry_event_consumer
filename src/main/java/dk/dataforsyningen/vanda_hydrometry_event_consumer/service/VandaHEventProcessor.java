@@ -66,10 +66,6 @@ public class VandaHEventProcessor {
       System.out.println(rawMessage);
     }
 
-    if (config.isLoggingAllEvents()) {
-      logger.debug(rawMessage);
-    }
-
     try {
       // Process each message consumed from Azure Event Hub
       EventModel event = new ObjectMapper().readValue(record.value(), EventModel.class);
@@ -80,14 +76,7 @@ public class VandaHEventProcessor {
 
       //skip undesired events
       if (acceptEvent(event)) {
-
-        if (config.isLoggingProcessedEvents()) {
-          logger.debug(rawMessage);
-        }
-
-        if (config.isDisplayRawData() && !config.isDisplayAll()) {
-          System.out.println(rawMessage);
-        }
+        logger.info(rawMessage);
 
         if (config.isDisplayData()) {
           System.out.printf("Message -> Key: %s, Value: %s%n", record.key(), event);
