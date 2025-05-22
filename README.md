@@ -20,14 +20,16 @@ DMP and DB connections are configured in the _application.properties_ file. The 
 
 ## How it works
 
+`vanda_hydrometry_data` and `vanda_hydrometry_event_consumer` writes to the same table, and to be able to disquisitive between what records/rows have been inserted by which application. WHen `vanda_hydrometry_event_consumer` inserts a new row, it also fill out the column `vanda_event_timestamp` with a timestamp for what time it created that row.
+
 This section describes the processing logic (the steps) behind each event type.
 
 ### MeasurementAdded
 
 * The event's time stamp (TS) is checked against the DB records belonging to this measurement's history to see if it is delayed. Delayed means that there is already registered a record with TS later than this event's TS. This can happen because the order of events in the stream is not guaranteed to be in the sorted order after TS.
 * If the event is delayed, it is dropped and a warning message is issued.
-* If the event is not delayed then all the records from the history are deactivated (is_current = false) and ...
-* the new event is added as the new active (is_current = true) record in the history.
+* If the event is not delayed then all the records/rows from the history are deactivated (is_current = false) and ...
+* the new event is added as the new active (is_current = true) record/row in the history/tab;e.
 
 Normally the addition event should be the 1st event receive concerning a certain measurement and it should be received and processed only once. However this is not always true since the event consumer can restart and reset the stream and so the event is being processed more than once. In this case a warning is issued but the event is still added to the measurement history as a new active record. 
 
@@ -35,16 +37,16 @@ Normally the addition event should be the 1st event receive concerning a certain
 
 * The event's time stamp (TS) is checked against the DB records belonging to this measurement's history to see if it is delayed. Delayed means that there is already registered a record with TS later than this event's TS. This can happen because the order of events in the stream is not guaranteed to be in the sorted order after TS.
 * If the event is delayed, it is dropped and a warning message is issued.
-* If the event is not delayed then all the records from the history are deactivated (is_current = false) and ...
-* the new event is added as the new active (is_current = true) record in the history.
+* If the event is not delayed then all the records/rows from the history are deactivated (is_current = false) and ...
+* the new event is added as the new active (is_current = true) record/row in the history/table.
 
 Normally an update event should always happen after an addition event. So if an update is processed while there is no record in the history a warning is issued but the event is still added to the history as the new active record.
 
 ### MeasurementDeleted
 
 * Try to deactivate all the history
-* If no record was affected it means that there is no history so no registration of this event. In this case a warning is issued that a delete event is attempted on a non existing measurement.
-* If the deactivation succeeded (at least one record was deactivated) then the deletion event is added as a new record in the history (in order to have a registration of its latest TS) but the record will not be active (is_current = false).
+* If no record/row was affected it means that there is no history so no registration of this event. In this case a warning is issued that a delete event is attempted on a non existing measurement.
+* If the deactivation succeeded (at least one record was deactivated) then the deletion event is added as a new record (row) in the history (in order to have a registration of its latest TS) but the record (row) will not be active (is_current = false).
 
 A delete event can never be delayed since it is always the last one. However it may be received before other delayed event (in which case the latest should be dropped).
 
